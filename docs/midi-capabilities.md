@@ -4,10 +4,20 @@ Findings from testing a VR-09 over USB in MIDI IN Mode 2, cross-checked with the
 Implementation document (`docs/VR-09_VR-730_MIDI_Implementation.pdf`), including its
 implementation chart.
 
-## Loading a Registration
+## Switching scenes from dumps
 
-No single message loads a Registration. A scene switch is done by writing each parameter
-with DT1, which `vr09.py recall NAME` does in about 0.15 s (66 messages, 2 ms apart).
+Terms used in this project:
+
+- Registration: the keyboard's own stored setup, selected with its panel buttons.
+- Dump: a snapshot of the keyboard's parameter values, saved as `dumps/NAME.json`. It is taken
+  with `vr09.py dump NAME` after recalling a Registration with the panel.
+- Recall: writing a dump's values back to the keyboard, one parameter per message, with
+  `vr09.py recall NAME`. It takes about 0.15 s (66 messages, 2 ms apart), and afterwards the
+  keyboard sounds like the Registration the dump came from.
+
+The keyboard's own Registrations cannot be selected, read or edited over MIDI. A recall only
+copies parameter values, so the display keeps showing the title, number and button LEDs of the
+Registration last selected on the panel.
 
 What was ruled out:
 
@@ -26,6 +36,129 @@ What was ruled out:
 What is still open:
 
 - Loading Registrations from a USB memory stick (offline only, not live).
+
+## Implementing a scene switcher
+
+Everything needed to rewrite `vr09.py recall` in another language.
+
+### Prerequisites and transport
+
+- The unit must be in MIDI IN Mode 2: model ID `62` only addresses the keyboard part in that
+  mode. Check it with an Identity Request, `F0 7E 7F 06 01 F7`. In Mode 2 the reply is
+  `F0 7E 10 06 02 41 62 00 00 06 00 01 00 00 F7` (on our VR-09); in Mode 1 the bytes after
+  `41` are `42 00 ...` instead.
+- USB is class compliant. On Linux, `amidi -l` lists the port as `hw:C,D,0`, and the raw
+  device is `/dev/snd/midiC<C>D<D>`, opened read and write. Writing bytes to it sends them,
+  reading returns whatever the unit sent. No driver or library is needed.
+- The card number can change when the unit is restarted or replugged, so look the port up by
+  name ("VR-09") each time.
+
+### Message format
+
+All numbers are hexadecimal. Addresses and sizes are written with 7 bits per byte.
+
+| Message | Bytes |
+|---|---|
+| DT1, keyboard part | `F0 41 10 62 12 a1 a2 a3 d1 ... dn sum F7` |
+| RQ1, keyboard part | `F0 41 10 62 11 a1 a2 a3 s1 s2 s3 sum F7` |
+| DT1, synth section | `F0 41 10 00 00 71 12 a1 a2 a3 a4 d1 ... dn sum F7` |
+| RQ1, synth section | `F0 41 10 00 00 71 11 a1 a2 a3 a4 s1 s2 s3 s4 sum F7` |
+
+- `10` is the device ID, `41` is Roland, `12` is DT1 (write), `11` is RQ1 (read).
+- Checksum: `sum = (128 - (a1 + ... + d_n) mod 128) mod 128`, taken over the address and the
+  data (DT1) or the address and the size (RQ1).
+- Example from the document: setting the upper synth tone to JP8 Brass is
+  `F0 41 10 62 12 01 03 01 59 01 00 21 F7`.
+- The reply to an RQ1 is a DT1 with the requested address and data.
+
+### Blocks
+
+These blocks together hold everything that changed between Registrations. The `01 xx 00` slots
+marked "not in the map" were found by scanning and hold part data like the documented ones.
+
+| Name | Model | Start address | Size |
+|---|---|---|---|
+| system | `62` | `00 00 00` | `69` |
+| upper piano | `62` | `01 01 00` | `65` |
+| upper synth dual 2 | `62` | `01 02 00` | `65` |
+| upper synth | `62` | `01 03 00` | `65` |
+| lower piano | `62` | `01 11 00` | `65` |
+| lower synth | `62` | `01 13 00` | `65` |
+| upper piano dual 2 | `62` | `01 31 00` | `65` |
+| drum | `62` | `01 41 00` | `65` |
+| part slots, not in the map | `62` | `01 00 00`, `01 10 00`, `01 12 00`, `01 20 00`, `01 21 00`, `01 22 00`, `01 30 00`, `01 51 00` | `65` each |
+| organ upper | `62` | `02 00 00` | `3A` |
+| organ lower | `62` | `02 01 00` | `3A` |
+| organ pedal | `62` | `02 02 00` | `3A` |
+| synth set part upper 2 | `00 00 71` | `18 00 21 00` | `09` |
+| synth set part upper 1 | `00 00 71` | `18 00 22 00` | `09` |
+| synth set part lower | `00 00 71` | `18 00 25 00` | `09` |
+
+### Write grouping
+
+A DT1 must start at a parameter's own address. Most parameters take one byte, so most messages
+carry one data byte. Three groups must be written as one message:
+
+| Where | Start | Bytes | Content |
+|---|---|---|---|
+| system block | `00 00 00` | 2 | reverb type, reverb level |
+| every part block and part slot | offset `00 01` | 3 | tone number, bank MSB, bank LSB |
+| every synth set part | offset `00 06` | 3 | bank MSB, bank LSB, program |
+
+If any byte of a group changes, send the whole group.
+
+### Recall algorithm
+
+```
+capture, once per Registration
+  the user recalls the Registration on the panel
+  for each block
+    send RQ1 for the whole block
+    if no reply: wait 0.5 s and retry (the unit is silent for a moment after a recall)
+  save address -> value for every byte
+
+build the switch set, whenever the saved Registrations change
+  varying = the addresses whose value is not the same in all saved Registrations
+
+recall target
+  for each write group touching an address in varying
+    send DT1 with the target's values
+    wait 2 ms
+```
+
+- No read is needed at recall time: writing the target's value at every varying address gives
+  the same result whatever was loaded before.
+- Gap: 0 ms overflows the unit's buffer ("Midi buffer full") and most writes are lost. 1, 2, 3,
+  4, 5, 10 and 20 ms all worked. With our four Registrations the switch set was 66 messages, so
+  a recall took 0.15 s at 2 ms.
+- Limitation: an address that is the same in every saved Registration is never written. If it
+  was changed by hand on the panel, a recall does not undo it. Writing every address of every
+  block instead takes about 1,800 messages (1,821 bytes in all blocks), about 4 s at 2 ms.
+
+### Reading replies
+
+- Drop every byte from `F8` to `FF` before parsing: the unit sends MIDI clock, and realtime
+  bytes may arrive in the middle of a SysEx reply.
+- Keep only DT1 messages with the expected model ID, check their checksum, and keep only
+  addresses inside the requested range: the unit also sends a DT1 by itself whenever a panel
+  control changes.
+
+### Known quirks
+
+- After a recall, the bank LSB of synth set part upper 1 in Registration 3 reads back as 0
+  instead of 64, and the octave shift (offset `00 07`) of the upper synth parts in
+  Registration 4 reads back as 52 instead of 64. The sound was correct.
+- The title, the number and the button LEDs of the selected Registration cannot be changed, so
+  the display keeps showing the Registration that was last selected on the panel.
+- A long burst of reads to undefined addresses once made the unit stop answering until it was
+  restarted. Normal block reads never caused this.
+
+### Dump files
+
+`vr09.py` stores a dump as a JSON object. Each key is `block:XXXXXXXX`: the block name and the
+address as one number, `a1 << 14 | a2 << 7 | a3` (keyboard part) or
+`a1 << 21 | a2 << 14 | a3 << 7 | a4` (synth section), in 8 hexadecimal digits. Each value is the
+byte stored there.
 
 ## Undocumented areas
 
@@ -60,8 +193,8 @@ that answer:
 
 ### Other observations
 
-- The unit sometimes sends MIDI clock (`F8`) without any audible sequence; `vr09.py` and
-  `scan.py` ignore it when parsing replies.
+- The unit sends MIDI clock (`F8`), see Clock; `vr09.py` and `scan.py` ignore realtime bytes
+  when parsing replies.
 - Scanning at full speed once made the unit stop answering until it was restarted. With 20 ms
   between reads and an identity check every 32 reads, the scans above ran without problems.
 
@@ -94,20 +227,113 @@ https://apps.apple.com/app/id589704005
 - Writing a whole block as one message does not work: only some of its parameters are applied.
 - Reads (RQ1) accept whole blocks.
 
+## Clock
+
+- The unit sends a steady MIDI clock (`F8`) even when no sequence is audible. On 2026-10-07
+  it sent 380 ticks in 5 seconds (one every 13.2 ms), which is 189 BPM at 24 ticks per beat.
+  The implementation chart says the clock is sent when the Composer plays, so the Composer or
+  the rhythm may have been running without being audible.
+- The VR-09 can therefore act as a clock source for a DAW or other gear. Not yet tested:
+  whether 189 BPM is the tempo setting, and whether the clock follows a tempo change.
+- The other direction is closed: the chart marks clock and start/stop as not recognised, and
+  the address map has no tempo parameter, so the unit cannot follow an external tempo.
+- No Active Sensing (`FE`) was seen during the measurement, although the document says it is
+  sent every 250 ms.
+
+## Drums with a sequencer
+
+Tested on 2026-10-07 over USB in Mode 2: one kick drum (note 36), then two bars of a basic beat
+at 100 BPM (closed hi-hat 42 on every eighth note, kick 36 on beats 1 and 3, snare 38 on beats
+2 and 4, velocities 60 to 90), all on MIDI channel 11, while a chord was held on the keyboard.
+Both the drums and the chord were heard. Not tested: dense playing on both at once (the number
+of simultaneous voices is unknown), choosing the kit, and the drum level.
+
+- The keyboard follows no external clock, so the sequencer sets the tempo.
+- Leave the unit's own rhythm and the Composer off, or they play on top of the sequencer.
+- The unit's USB output also sends what the player plays. Route only channel 11 from the
+  sequencer back to the unit; echoing channels 3 and 4 would sound every note twice.
+- The block at `01 41 00` is documented as the DRUM part, but its values do not match the map
+  (offsets `02` to `04` hold values like organ drawbar levels), so its offsets for the kit and
+  the level are unconfirmed.
+
+## Choosing a tone
+
+Piano, synth and drum tones are chosen by writing three bytes at offset `00 01` of the part,
+in one message: tone number, bank MSB, bank LSB. The complete list is in `docs/tone-list.md`
+(285 tones: 69 piano, 199 synth, 17 drum kits), and in `docs/tones.json` for programs. Both are
+generated from pages 15 to 18 of Roland's document by `extract_tones.py`.
+
+| Part | Block | Tone list used |
+|---|---|---|
+| Upper piano | `01 01 00` | Piano section |
+| Upper piano dual 2 | `01 31 00` | Piano section |
+| Lower piano | `01 11 00` | Piano section |
+| Upper synth | `01 03 00` | Synthesizer section |
+| Upper synth dual 2 | `01 02 00` | Synthesizer section |
+| Lower synth | `01 13 00` | Synthesizer section |
+
+Example: Grand Piano on the upper piano part is `F0 41 10 62 12 01 01 01 38 02 00 43 F7`: the
+sum of address and data is 1 + 1 + 1 + 56 + 2 + 0 = 61, and 128 - 61 = 67 = `43`.
+
+- The tone number is the value in parentheses in Roland's list (the Program Change number
+  minus one). The document's own example agrees: JP8 Brass is listed as 90 (59h) and written
+  as `59 01 00`.
+- Checked against the unit: all 24 piano and synth tones stored in our four Registration dumps
+  map to a name in the list, for example GrandPianoV, FM EP 1, FS Brass, JP8 Strings1, JP8
+  Brass, Sine Lead 1 and Syn Bass.
+- The piano section's OTHERS group holds the organ-like tones (Hard Organ, Mad Organ, Pipe
+  Organ 1 to 3, Gospel Or.1 to 3), harpsichords, accordions, a harmonica and similar. The
+  synth section's OTHERS group holds mallets, guitars and woodwinds.
+- Tones marked (v1.03) in the list need System Program version 1.03 or newer.
+- The organ has no tone list: its sound comes from the organ type (`00 00 42`), the drawbar
+  levels, percussion, vibrato and rotary settings.
+- Drum kits: the list gives a tone number and bank for each kit (for example Pop Kit is `03 01
+  00`, TR-808 is `17 00 00`), but the block at `01 41 00` is not a tone triple: its values in our
+  dumps (`51 08 08`, `51 06 06`) match no entry. Where the kit is selected is therefore unknown.
+  Sounding a kit through channel 11 is not tested either.
+- Not tested: writing a tone chosen from the list. Writing the tone bytes saved in a dump does
+  work, which is how a recall of a dump works.
+
 ## Capabilities
 
-| Feature | Over MIDI | How |
+The Status column says whether we verified it on the unit or only the document states it.
+"Verified by recalling dumps" means that recalling dumps changed the sound as expected; the
+parameter was not tested alone.
+
+| What | Status | How |
 |---|---|---|
-| Tempo, clock sync | No | The chart marks Clock as transmitted only, when the Composer plays. The address map has no tempo parameter. |
-| Rhythm start/stop | No | Only as a footswitch function. The function given to each pedal is writable (`00 00 4F`, `00 00 50`), but the pedal cannot be pressed over MIDI. |
-| Rhythm volume | Yes | RHYTHM LEVEL, `00 00 25`. |
-| Song volume | Yes | SONG LEVEL, `00 00 23`. |
-| Drums | Partly | In Mode 2, channel 11 is the DRUM part: drums can be played from an external sequencer with its own clock. The kit is probably the tone number of the DRUM part (`01 41 01`), not tested. |
-| Effect types and levels | Yes, live | DT1: reverb type and level, MFX type and level, delay type and level, overdrive, compressor, tone level, rotary speeds. |
-| Organ drawbars | Yes, live | DT1, `02 00 03` to `02 00 0B` for the upper organ; the panel LEDs follow. |
-| Per-channel controllers | Yes | CC91 reverb send, CC93 chorus send, CC71 to CC77 (resonance, release, attack, cutoff, decay, vibrato rate and depth), CC7 volume, CC10 pan. |
-| Overall volume | Yes | CC11 on channel 16, like the expression pedal. |
-| Panel changes | Transmitted | The unit sends a DT1 by itself when a panel control changes. |
+| Recall a dump (the sound of a saved Registration) | Verified | `vr09.py recall NAME`, about 0.15 s, 66 DT1 messages 2 ms apart |
+| Read any parameter of the current state | Verified | RQ1, whole blocks at once (`vr09.py dump`) |
+| Change single parameters live | Verified | DT1, one parameter per message (reverb, drawbars, tones, effects) |
+| Organ drawbars | Verified | `02 00 03` to `02 00 0B` (upper organ). The panel LEDs follow and the sound changes. |
+| Reverb type and level | Verified | `00 00 00` (type) and `00 00 01` (level), written together |
+| Select a section (piano, synth, organ) | Verified by recalling dumps | the MUTE flag of each part (offset `00 00`) |
+| Choose the tone of a part | Verified by recalling dumps; list documented | tone number and the two bank bytes at offset `00 01`, written together; all tones in `docs/tone-list.md` |
+| MFX type and level, delay type and level, overdrive, rotary, percussion, key click | Verified by recalling dumps | System block `00 00 xx` |
+| Synth part tone (bank and program) | Verified by recalling dumps | `18 00 21/22/25 06` to `08` (synth section), written together |
+| Watch panel changes live | Verified | the unit sends a DT1 by itself (`vr09.py watch`) |
+| Use the unit as clock source | Observed, see Clock | it sends MIDI clock (`F8`) |
+| Identify the unit and its MIDI mode | Verified | Identity Request; the reply differs between Mode 1 and Mode 2 |
+| Play the parts from a sequencer | Documented | Mode 2 channels, see Channels in Mode 2 |
+| Play drums from your own sequencer and clock | Verified | notes on channel 11 (`9A` note on, `8A` note off) sound while a chord is held on the keyboard, see Drums with a sequencer; the kit and its level were not tested |
+| Rhythm and song volume | Documented address | `00 00 25` (rhythm level), `00 00 23` (song level) |
+| Compressor and tone level | Documented address | `00 00 62` (compressor level), `00 00 61` (tone level) |
+| Overall volume | Documented | CC11 on channel 16, like the expression pedal |
+| Per-part volume and pan | Documented | CC7, CC10 |
+| Reverb and chorus send per part | Documented | CC91, CC93 |
+| Synth sound shaping | Documented | CC71 to CC77 (resonance, release, attack, cutoff, decay, vibrato rate and depth) |
+| Sustain, sostenuto, soft pedal, pitch bend | Documented | CC64, CC66, CC67, pitch bend |
+| What each footswitch does | Documented address | `00 00 4F` and `00 00 50` |
+| GM2 sounds on the other channels | Documented | Program Change and Bank Select work there, on channels 5 to 10, 12, 14 and 15 |
+
+## What cannot be done
+
+| What | Why |
+|---|---|
+| Select a Registration, or update its title, number or LEDs | No message or address for it: Program Change, every address space and every model ID were tested |
+| Set the tempo | No tempo parameter in the address map |
+| Sync the unit to an external clock | The chart marks clock as not recognised |
+| Start or stop the rhythm or the Composer | Start/stop are not recognised; only a physical footswitch can do it, and the footswitch cannot be pressed over MIDI |
 
 ## Channels in Mode 2
 

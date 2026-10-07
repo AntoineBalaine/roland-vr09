@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dump, diff and replay VR-09 state over USB MIDI using RQ1/DT1 (no dependencies besides amidi).
+"""Dump, diff and recall VR-09 state over USB MIDI using RQ1/DT1 (no dependencies besides amidi).
 
   vr09.py ports
   vr09.py dump NAME     read every block in BLOCKS into dumps/NAME.json

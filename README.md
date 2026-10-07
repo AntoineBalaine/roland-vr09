@@ -98,11 +98,15 @@ Registration state directly instead of reconstructing it by ear.
 
 ## Results (tested over USB on a VR-09 in MIDI IN Mode 2)
 
-Scene switching works for the sound and the part list, using `vr09.py`:
+Scene switching from dumps works for the sound and the part list, using `vr09.py`. A dump is a
+snapshot of the keyboard's parameter values, taken after recalling a Registration with its panel
+button. A recall writes a dump's values back, so the keyboard sounds like that Registration. The
+keyboard's own Registrations cannot be selected, read or edited over MIDI. See
+`docs/midi-capabilities.md` for details.
 
 ```
 vr09.py dump NAME     read all blocks into dumps/NAME.json
-vr09.py recall NAME   read the current state, write the values of dump NAME that differ (about 4 seconds)
+vr09.py recall NAME   write dump NAME to the keyboard without reading it first (about 0.15 seconds)
 vr09.py diff A B      list the differences between two dumps
 vr09.py watch         print every change made on the panel as it happens
 ```
@@ -116,15 +120,15 @@ vr09.py watch         print every change made on the panel as it happens
   (`00 00 00`, two bytes), and the bank bytes with the tone number (offset `00 01`, three bytes).
   The same holds for the bank and program bytes of the Synth Set parts (offset `00 06`).
 - A Registration is not stored as one value. Recalling one rewrites the tone numbers, the section
-  MUTE flags, the organ drawbars and about twenty values of the System block. Replaying those
-  values reproduces the sound and the list of parts shown on the screen.
+  MUTE flags, the organ drawbars and about twenty values of the System block. Recalling a dump
+  writes those values and reproduces the sound and the list of parts shown on the screen.
 - The Registration title, number and button LEDs are not readable or writable. A scan of the
   first 16 groups of 128 x 128 addresses found no value that changes with the Registration
-  number, so the screen keeps showing the previous title after a replay.
+  number, so the screen keeps showing the previous title after a recall.
 - The scan found eight part slots outside the map (`01 00`, `01 10`, `01 12`, `01 20`, `01 21`,
   `01 22`, `01 30`, `01 51`). They are part of the dumps but were identical in the Registrations
   we compared.
-- Known leftovers after a replay: the bank LSB of the first synth part in Registration 3 reads
+- Known leftovers after a recall: the bank LSB of the first synth part in Registration 3 reads
   back as 0 instead of 64, and the octave shift of the upper synth part in Registration 4 reads
   back as 52 instead of 64. The sound is unaffected as far as we heard.
 - The unit stays silent for a moment after a Registration recall, so reads retry on an empty
