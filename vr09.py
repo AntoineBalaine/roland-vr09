@@ -21,7 +21,7 @@ KINDS = {
     "synth": {"model": [0x00, 0x00, 0x71], "length": 4},
 }
 
-# (name, start address, size, kind). Sizes are derived from the highest offset in the
+# (name, start address, size, kind). The part_ slots are not in the map: the scan found data there. Sizes are derived from the highest offset in the
 # Parameter Address Map and may need adjusting if the unit does not answer.
 BLOCKS = [
     ("system", (0x00, 0x00, 0x00), 0x69, "kb"),
@@ -32,6 +32,14 @@ BLOCKS = [
     ("lower_synth", (0x01, 0x13, 0x00), 0x65, "kb"),
     ("upper_piano_dual2", (0x01, 0x31, 0x00), 0x65, "kb"),
     ("drum", (0x01, 0x41, 0x00), 0x65, "kb"),
+    ("part_01_00", (0x01, 0x00, 0x00), 0x65, "kb"),
+    ("part_01_10", (0x01, 0x10, 0x00), 0x65, "kb"),
+    ("part_01_12", (0x01, 0x12, 0x00), 0x65, "kb"),
+    ("part_01_20", (0x01, 0x20, 0x00), 0x65, "kb"),
+    ("part_01_21", (0x01, 0x21, 0x00), 0x65, "kb"),
+    ("part_01_22", (0x01, 0x22, 0x00), 0x65, "kb"),
+    ("part_01_30", (0x01, 0x30, 0x00), 0x65, "kb"),
+    ("part_01_51", (0x01, 0x51, 0x00), 0x65, "kb"),
     ("organ_upper", (0x02, 0x00, 0x00), 0x3A, "kb"),
     ("organ_lower", (0x02, 0x01, 0x00), 0x3A, "kb"),
     ("organ_pedal", (0x02, 0x02, 0x00), 0x3A, "kb"),
@@ -80,11 +88,17 @@ def rq1(port, address, size, kind="kb"):
     length = KINDS[kind]["length"]
     body = list(address) + to_bytes(size, length)
     msg = header(kind, 0x11) + body + [checksum(body), 0xF7]
-    with tempfile.NamedTemporaryFile() as out:
-        send(port, msg, out.name)
-        raw = open(out.name, "rb").read()
     lo = from_bytes(address)
-    return {a: v for a, v in parse_dt1(raw, kind).items() if lo <= a < lo + size}
+    # Right after a Registration recall the unit is busy and stays silent, so retry on an empty reply.
+    for attempt in range(5):
+        with tempfile.NamedTemporaryFile() as out:
+            send(port, msg, out.name)
+            raw = open(out.name, "rb").read()
+        values = {a: v for a, v in parse_dt1(raw, kind).items() if lo <= a < lo + size}
+        if values:
+            break
+        time.sleep(0.5)
+    return values
 
 
 def parse_dt1(raw, kind="kb"):
@@ -145,7 +159,7 @@ def groups(changed):
     """Turn changed keys into (block, start address, length) writes.
 
     Addresses marked # in the map cannot start a message, so the reverb level goes with the reverb
-    type, and the bank bytes go with the tone number.
+    type, and the bank bytes go with the tone number (the same holds for the synth set parts).
     """
     base = {name: from_bytes(start) for name, start, _, _ in BLOCKS}
     result = set()
@@ -155,8 +169,10 @@ def groups(changed):
         offset = address - base[block]
         if block == "system" and offset in (0, 1):
             result.add((block, base[block], 2))
-        elif block.startswith(("upper_", "lower_", "drum")) and offset in (1, 2, 3):
+        elif block.startswith(("upper_", "lower_", "drum", "part_")) and offset in (1, 2, 3):
             result.add((block, base[block] + 1, 3))
+        elif block.startswith("synth_set") and offset in (6, 7, 8):
+            result.add((block, base[block] + 6, 3))
         else:
             result.add((block, address, 1))
     return sorted(result)
