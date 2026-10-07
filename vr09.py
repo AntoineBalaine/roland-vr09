@@ -5,7 +5,7 @@
   vr09.py dump NAME     read every block in BLOCKS into dumps/NAME.json
   vr09.py diff A B      list the addresses whose values differ between two dumps
   vr09.py apply A B     write the values of dump A that differ from dump B to the keyboard (DT1)
-  vr09.py recall NAME   read the current state and write the values of dump NAME that differ from it
+  vr09.py recall NAME   write registration NAME (dumps/NAME.json) without reading the current state
   vr09.py watch         dump repeatedly and print every change as it happens
 """
 import json
@@ -16,6 +16,8 @@ import sys
 import time
 
 DEVICE = 0x10
+# Seconds between two DT1 messages. 0 overflows the unit's buffer (\"Midi buffer full\"), 1 to 20 ms all worked.
+GAP = 0.002
 # Keyboard part: model 62H with 3-byte addresses and sizes. Synth section: model 00 00 71H with 4-byte ones.
 KINDS = {
     "kb": {"model": [0x62], "length": 3},
@@ -158,7 +160,7 @@ def watch():
 def dt1(fd, kind, address, data):
     body = to_bytes(address, KINDS[kind]["length"]) + data
     os.write(fd, bytes(header(kind, 0x12) + body + [checksum(body), 0xF7]))
-    time.sleep(0.05)
+    time.sleep(GAP)
 
 
 def groups(changed):
@@ -184,8 +186,8 @@ def groups(changed):
     return sorted(result)
 
 
-def write_differences(fd, wanted, current):
-    changed = [k for k in sorted(wanted) if wanted[k] != current.get(k)]
+def write_differences(fd, wanted, current, only=None):
+    changed = [k for k in (only or sorted(wanted)) if wanted[k] != current.get(k)]
     writes = groups(changed)
     for block, start, length in writes:
         data = [wanted[f"{block}:{start + i:08X}"] for i in range(length)]
@@ -193,10 +195,22 @@ def write_differences(fd, wanted, current):
     print(f"sent {len(writes)} messages for {len(changed)} changed values")
 
 
+def varying_keys(dumps):
+    """Keys whose value is not the same in every dump."""
+    return sorted(k for k in set().union(*dumps) if len({d.get(k) for d in dumps}) > 1)
+
+
 def recall(name):
-    """Read the keyboard's current state and write the values of dump name that differ from it."""
+    """Write the values of dump name at every address that differs between the saved registrations.
+
+    The current state is not read: writing the target's value at all of those addresses gives the
+    same result whatever registration is loaded.
+    """
+    saved = {os.path.basename(f)[:-5]: json.load(open(f"dumps/{f}")) for f in os.listdir("dumps") if f.startswith("reg")}
     fd = open_device(find_port())
-    write_differences(fd, json.load(open(f"dumps/{name}.json")), snapshot(fd))
+    start = time.time()
+    write_differences(fd, saved[name], {}, only=varying_keys(list(saved.values())))
+    print(f"{time.time() - start:.2f}s")
 
 
 def apply(a, b):
