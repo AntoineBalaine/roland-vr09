@@ -15,16 +15,55 @@ What was ruled out:
   received.
 - Program Change, with and without Bank Select, on channel 16 (the control channel in
   Mode 2): tested, no parameter changed.
-- The keyboard part's address space, first 16 address groups: scanned, no address follows the
-  selected Registration number. The title, the number and the button LEDs therefore stay on
-  the previous Registration after a recall.
+- The keyboard part's whole address space (groups `00` to `7F`): scanned, no address follows
+  the selected Registration number. Only groups `00` to `02` hold data. The title, the number
+  and the button LEDs therefore stay on the previous Registration after a recall.
+- The synth section (model `00 00 71`): see below, nothing follows the Registration.
+- Every other model ID of 1 to 4 bytes: only model `47` answers, see below; it holds no
+  Registration number.
+- The Roland app does not claim to recall Registrations, see below.
 
 What is still open:
 
-- Other model IDs and the address groups above `0F`. Scanning undefined addresses made the unit
-  stop answering until it was restarted, so this needs care.
 - Loading Registrations from a USB memory stick (offline only, not live).
-- The Roland app, see below.
+
+## Undocumented areas
+
+Found with `scan.py` (reads only). Writing to them has not been tried.
+
+### Synth section, model `00 00 71` (four-byte addresses)
+
+Unlike the keyboard part, the synth section stays silent for some addresses, including the
+Synth Tone areas the map documents (`19 21`, `19 41`, `1A 21`). The first address byte groups
+that answer:
+
+| Group | Content |
+|---|---|
+| `01 00 00 00` | 55 bytes of settings. Only `01 00 00 30` changed between Registrations (1 for Registrations 1 and 2, 0 for 3 and 4), so it is a flag, not a number. |
+| `02 00 00 00` | 43 bytes of settings, unchanged between Registrations. |
+| `10` to `17` | 256 stored entries, 32 per group, 4 address steps each: a 64-byte block starting with the name "InitPrf", a 16-byte block and a 64-byte block. All 256 are identical and at their initial values, so this memory is unused. |
+| `18 00 00 00` | The live Synth Set, also named "InitPrf". Its parts are at `18 00 21 00`, `18 00 22 00` and `18 00 25 00` (documented). |
+| `20 00` to `20 07` | 8 entries named "INIT STUDIO", all identical. |
+
+### Model `47` (four-byte addresses)
+
+- Answers only when the low digit of the first address byte is 0 to 9 (`00` to `09`, `10` to
+  `19`, and so on). Every value is 0 to 15, half a byte.
+- Data sits in groups `02` to `05`, `08` and `09`. Groups `08` and `09` change when a
+  Registration is recalled, but they also change without any button press (561 values between
+  two snapshots of the same Registration). Combined in pairs, the values form 4-byte words such
+  as `ff ff ff e1` and no text.
+- No value steps evenly across Registrations 1 to 4. The values that are stable repeat the same
+  patterns at many addresses, which fits copies of sound-engine coefficients.
+- Conclusion: the sound engine's working memory. Writing to it would not select a Registration
+  and could put the engine in an odd state.
+
+### Other observations
+
+- The unit sometimes sends MIDI clock (`F8`) without any audible sequence; `vr09.py` and
+  `scan.py` ignore it when parsing replies.
+- Scanning at full speed once made the unit stop answering until it was restarted. With 20 ms
+  between reads and an identity check every 32 reads, the scans above ran without problems.
 
 ## The Roland app: VR-09 Editor
 

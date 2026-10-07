@@ -115,6 +115,8 @@ def parse_dt1(raw, kind="kb"):
     length = KINDS[kind]["length"]
     start = len(prefix)
     values = {}
+    # Realtime bytes (clock F8 and above) may be interleaved anywhere, even inside a SysEx reply.
+    raw = bytes(b for b in raw if b < 0xF8)
     for chunk in raw.split(b"\xf0")[1:]:
         msg = list(chunk.split(b"\xf7")[0])
         if msg[:start] != prefix:
