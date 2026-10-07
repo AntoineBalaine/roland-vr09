@@ -3,3 +3,4 @@ dumps/check*.json
 dumps/now*.json
 dumps/after*.json
 dumps/back*.json
+dumps/verify*.json

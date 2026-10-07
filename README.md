@@ -14,10 +14,9 @@ Registration banks (scenes) switched remotely via MIDI.
 - No existing public project (that we found) implements live DT1-based Registration switching.
   Everything found either parses *outgoing* SysEx from the unit's knobs/drawbars, or edits
   Registration files offline.
-- An undocumented **RQ1** ("Request Data 1", command ID `11H`, sibling to DT1's `12H`) *might*
-  exist on this hardware even though it isn't in the published chart — Roland uses this pairing
-  on much of their other gear sharing the same SysEx core. Worth testing before doing anything
-  else, since it could let us read Registration state back instead of reconstructing it by hand.
+- An undocumented **RQ1** ("Request Data 1", command ID `11H`, sibling to DT1's `12H`) exists on
+  this hardware even though it isn't in the published chart, and it reads back any block of the
+  Parameter Address Map. See the Results section below.
 
 ## Background: two sound generators
 
@@ -96,6 +95,41 @@ Registration state directly instead of reconstructing it by ear.
    that reproduce it, since the VR-09 won't do that translation over MIDI itself. The
    `vr09-tools` project below may have already done some of the legwork on how Registration data
    is encoded in `.UPG` files, worth checking before doing this from scratch.
+
+## Results (tested over USB on a VR-09 in MIDI IN Mode 2)
+
+Scene switching works for the sound and the part list, using `vr09.py`:
+
+```
+vr09.py dump NAME     read all blocks into dumps/NAME.json
+vr09.py recall NAME   read the current state, write the values of dump NAME that differ (about 4 seconds)
+vr09.py diff A B      list the differences between two dumps
+vr09.py watch         print every change made on the panel as it happens
+```
+
+- RQ1 works: `F0 41 10 62 11 <address 3 bytes> <size 3 bytes> <checksum> F7` gets a DT1 reply.
+  The synth section answers the same request with model ID `00 00 71` and four-byte addresses.
+- The unit also sends a DT1 by itself when a panel control changes, so `watch` could also listen
+  passively.
+- Reads accept a whole block, but writes must start at a parameter's own address. Addresses
+  marked `#` in the map cannot start a message: the reverb level is written with the reverb type
+  (`00 00 00`, two bytes), and the bank bytes with the tone number (offset `00 01`, three bytes).
+  The same holds for the bank and program bytes of the Synth Set parts (offset `00 06`).
+- A Registration is not stored as one value. Recalling one rewrites the tone numbers, the section
+  MUTE flags, the organ drawbars and about twenty values of the System block. Replaying those
+  values reproduces the sound and the list of parts shown on the screen.
+- The Registration title, number and button LEDs are not readable or writable. A scan of the
+  first 16 groups of 128 x 128 addresses found no value that changes with the Registration
+  number, so the screen keeps showing the previous title after a replay.
+- The scan found eight part slots outside the map (`01 00`, `01 10`, `01 12`, `01 20`, `01 21`,
+  `01 22`, `01 30`, `01 51`). They are part of the dumps but were identical in the Registrations
+  we compared.
+- Known leftovers after a replay: the bank LSB of the first synth part in Registration 3 reads
+  back as 0 instead of 64, and the octave shift of the upper synth part in Registration 4 reads
+  back as 52 instead of 64. The sound is unaffected as far as we heard.
+- The unit stays silent for a moment after a Registration recall, so reads retry on an empty
+  reply. Sending thousands of reads to undefined addresses made the unit stop answering until it
+  was restarted, so keep scans inside the documented address groups.
 
 ## Connecting hardware
 

@@ -5,13 +5,14 @@
   vr09.py dump NAME     read every block in BLOCKS into dumps/NAME.json
   vr09.py diff A B      list the addresses whose values differ between two dumps
   vr09.py apply A B     write the values of dump A that differ from dump B to the keyboard (DT1)
+  vr09.py recall NAME   read the current state and write the values of dump NAME that differ from it
   vr09.py watch         dump repeatedly and print every change as it happens
 """
 import json
 import os
+import select
 import subprocess
 import sys
-import tempfile
 import time
 
 DEVICE = 0x10
@@ -69,13 +70,6 @@ def header(kind, command):
     return [0xF0, 0x41, DEVICE] + KINDS[kind]["model"] + [command]
 
 
-def send(port, msg, reply_file=None):
-    args = ["amidi", "-p", port, "-S", " ".join(f"{b:02X}" for b in msg)]
-    if reply_file:
-        args += ["-r", reply_file, "-t", "1"]
-    subprocess.run(args, capture_output=True)
-
-
 def find_port():
     out = subprocess.run(["amidi", "-l"], capture_output=True, text=True).stdout
     for line in out.splitlines()[1:]:
@@ -84,16 +78,28 @@ def find_port():
     sys.exit("VR-09 not found, check the USB cable")
 
 
-def rq1(port, address, size, kind="kb"):
+def open_device(port):
+    """Open the raw ALSA MIDI device behind an amidi port name such as hw:2,0,0."""
+    card, device, _ = port[3:].split(",")
+    return os.open(f"/dev/snd/midiC{card}D{device}", os.O_RDWR | os.O_NONBLOCK)
+
+
+def rq1(fd, address, size, kind="kb"):
     length = KINDS[kind]["length"]
     body = list(address) + to_bytes(size, length)
     msg = header(kind, 0x11) + body + [checksum(body), 0xF7]
     lo = from_bytes(address)
     # Right after a Registration recall the unit is busy and stays silent, so retry on an empty reply.
     for attempt in range(5):
-        with tempfile.NamedTemporaryFile() as out:
-            send(port, msg, out.name)
-            raw = open(out.name, "rb").read()
+        while select.select([fd], [], [], 0)[0]:
+            os.read(fd, 4096)
+        os.write(fd, bytes(msg))
+        raw = b""
+        deadline = time.time() + 0.5
+        while time.time() < deadline and select.select([fd], [], [], 0.2)[0]:
+            raw += os.read(fd, 4096)
+            if raw.endswith(b"\xf7"):
+                break
         values = {a: v for a, v in parse_dt1(raw, kind).items() if lo <= a < lo + size}
         if values:
             break
@@ -120,10 +126,10 @@ def parse_dt1(raw, kind="kb"):
     return values
 
 
-def snapshot(port, verbose=False):
+def snapshot(fd, verbose=False):
     result = {}
     for block, start, size, kind in BLOCKS:
-        values = rq1(port, start, size, kind)
+        values = rq1(fd, start, size, kind)
         if verbose:
             print(f"{block:20s} {len(values)}/{size} bytes")
         result.update({f"{block}:{a:08X}": v for a, v in values.items()})
@@ -131,27 +137,27 @@ def snapshot(port, verbose=False):
 
 
 def dump(name):
-    result = snapshot(find_port(), verbose=True)
+    result = snapshot(open_device(find_port()), verbose=True)
     os.makedirs("dumps", exist_ok=True)
     with open(f"dumps/{name}.json", "w") as f:
         json.dump(result, f, indent=0, sort_keys=True)
 
 
 def watch():
-    port = find_port()
-    previous = snapshot(port)
+    fd = open_device(find_port())
+    previous = snapshot(fd)
     print("watching, change something on the keyboard", flush=True)
     while True:
-        current = snapshot(port)
+        current = snapshot(fd)
         for key in sorted(set(previous) | set(current)):
             if previous.get(key) != current.get(key):
                 print(f"{key}  {previous.get(key)} -> {current.get(key)}", flush=True)
         previous = current
 
 
-def dt1(port, kind, address, data):
+def dt1(fd, kind, address, data):
     body = to_bytes(address, KINDS[kind]["length"]) + data
-    send(port, header(kind, 0x12) + body + [checksum(body), 0xF7])
+    os.write(fd, bytes(header(kind, 0x12) + body + [checksum(body), 0xF7]))
     time.sleep(0.05)
 
 
@@ -178,16 +184,25 @@ def groups(changed):
     return sorted(result)
 
 
+def write_differences(fd, wanted, current):
+    changed = [k for k in sorted(wanted) if wanted[k] != current.get(k)]
+    writes = groups(changed)
+    for block, start, length in writes:
+        data = [wanted[f"{block}:{start + i:08X}"] for i in range(length)]
+        dt1(fd, KIND_OF[block], start, data)
+    print(f"sent {len(writes)} messages for {len(changed)} changed values")
+
+
+def recall(name):
+    """Read the keyboard's current state and write the values of dump name that differ from it."""
+    fd = open_device(find_port())
+    write_differences(fd, json.load(open(f"dumps/{name}.json")), snapshot(fd))
+
+
 def apply(a, b):
     """Send the values of dump a that differ from dump b."""
     da, db = (json.load(open(f"dumps/{n}.json")) for n in (a, b))
-    port = find_port()
-    changed = [k for k in sorted(da) if da[k] != db.get(k)]
-    writes = groups(changed)
-    for block, start, length in writes:
-        data = [da[f"{block}:{start + i:08X}"] for i in range(length)]
-        dt1(port, KIND_OF[block], start, data)
-    print(f"sent {len(writes)} messages for {len(changed)} changed values")
+    write_differences(open_device(find_port()), da, db)
 
 
 def diff(a, b):
@@ -203,6 +218,8 @@ if __name__ == "__main__":
         print(find_port())
     elif cmd == "dump" and len(sys.argv) == 3:
         dump(sys.argv[2])
+    elif cmd == "recall" and len(sys.argv) == 3:
+        recall(sys.argv[2])
     elif cmd == "apply" and len(sys.argv) == 4:
         apply(sys.argv[2], sys.argv[3])
     elif cmd == "watch":
