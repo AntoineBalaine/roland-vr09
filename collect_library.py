@@ -8,6 +8,11 @@ preview that the tool plays itself over MIDI, one patch at a time.
   collect_library.py photo [--cam SOURCE] [--crop X,Y,W,H] [--exposure N]
                                               take one photo into library/photos/test.jpg and print
                                               what the OCR reads, to set up the camera
+  collect_library.py reread [--all]           read the saved photos again to refresh tone, effect and level
+                                              (titles are never touched; reviewed entries are skipped
+                                              unless --all)
+  collect_library.py sync                     after editing titles in library/catalog.yaml, rename the keys and
+                                              files to match them
   collect_library.py unnamed                  list the patches still named unnamed_...
   collect_library.py rename OLD NEW           give a patch its real name (files and catalog follow)
   collect_library.py devices                  list the audio inputs
@@ -22,6 +27,13 @@ capture options:
                        (default: VR09_AUDIO_DEVICE, then the system default input, often the laptop
                        microphone)
   --style STYLE        default preview style, see below (default chord)
+  --auto               ask nothing but "recall the next patch, press Enter" (q to stop): the name is the one
+                       read from the screen, and the preview uses the default style
+  --start BANK-SLOT    the slot of the first patch, such as 5-1 (default: the one after the latest captured
+                       patch in the catalog). The tool counts the slots itself, --per-bank N of them in a
+                       bank (default 4); type a slot such as 2-3 at the prompt to jump to it
+  --no-vision          do not read the screen with the API; patches get a placeholder name
+  --vision-model M     model that reads the screen (default claude-haiku-4-5, or VR09_VISION_MODEL)
   --no-audio           skip the audio preview
 
 Preview styles. The tool sends the notes to the pedal, lower and upper parts (MIDI channels 2, 3 and 4 in
@@ -29,6 +41,8 @@ Mode 2) for half a second, records until the tail has died, cuts the silence at 
 most 2 seconds and fades the end out. Only the parts the patch uses make a sound.
   chord   C major triad around middle C         pad     wide C major chord from C3
   bass    one low C (C2)                        lead    one G4
+  drums   kick, hi-hat, snare, hi-hat on the drum part (MIDI channel 11); chosen by itself in --auto when
+          the screen shows a "Kit"
   m       you play on the keyboard (4 s recording)
   48,55   any MIDI note numbers, separated by commas
   s       skip the preview
@@ -40,18 +54,26 @@ Each captured patch writes:
   library/catalog.yaml      one entry per patch, meant to be edited by hand; the three files above are
                             found from the entry's key, so rename entries with the rename command
 
-Dependencies beyond the standard library, installed in .venv: pyyaml, numpy, sounddevice, soundfile,
-requests (phone camera), pillow and pytesseract (OCR, with the tesseract-data-eng system package).
-Each is only imported when the feature that needs it is used.
+The screen is read by sending its photo to the Anthropic API, because Tesseract cannot read this small
+bitmap font. The key is ANTHROPIC_API_KEY, taken from the environment or from the file named by
+VR09_ENV_FILE (default ~/.env, of which only the needed lines are read). A key that is not tied to a
+workspace also needs ANTHROPIC_WORKSPACE_ID (wrkspc_...), sent as the anthropic-workspace-id header. Entries read this way get
+"reviewed: false" in the catalog: check the title, set it to true, then run sync if you changed it.
+
+Dependencies beyond the standard library, installed in .venv: anthropic, pyyaml, numpy, sounddevice,
+soundfile, pillow, and requests (phone camera). Each is only imported when the feature that needs it
+is used.
 
 Camera: a webcam is the simplest. It is read with ffmpeg (a system package, no Python module), so
 --cam /dev/video0 is all it takes; the default is /dev/video0 when that device exists. Otherwise any
 Android IP-camera app that serves a JPEG snapshot over HTTP works (the common "IP Webcam" app's
 default snapshot URL is http://<phone-ip>:8080/shot.jpg). Set VR09_CAM or pass --cam to choose.
 """
+import base64
 import datetime
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -59,6 +81,24 @@ import time
 import vr09
 
 EXPOSURE = int(os.environ.get("VR09_EXPOSURE", "40"))
+VISION_MODEL = os.environ.get("VR09_VISION_MODEL", "claude-haiku-4-5")
+ENV_FILE = os.environ.get("VR09_ENV_FILE", os.path.expanduser("~/.env"))
+SCREEN_PROMPT = (
+    "The first image is a photo of the LCD screen of a Roland VR-09 keyboard, showing a registration; the "
+    "second is the same screen's title row enlarged. Read it exactly as displayed, keeping upper and lower "
+    "case. Take care with characters that look alike, such as O and 0, l and I, 5 and S. Reply with only a "
+    "JSON object with these string fields: "
+    '"slot": the registration number in the highlighted box at the top left, such as 1-1; '
+    '"name": the registration name next to it; '
+    '"tone": the sound names on the lines under the title, without the numbers at the right; a layered '
+    "patch has two lines, marked 1 and 2 in small boxes, so join them with ' + ' (for example "
+    "'Saw Lead 1 + Super Saws'); a drum kit has a single line; "
+    '"effect": the text after MFX: on the bottom line; '
+    '"level": the numbers shown at the right of the sound lines, line by line, joined with \' / \' '
+    "(for example '0 10 / -2 12'); "
+    '"other": any other text on the screen that the fields above do not cover. '
+    'Use "" for anything you cannot see.'
+)
 LIBRARY = "library"
 PHOTOS = os.path.join(LIBRARY, "photos")
 AUDIO = os.path.join(LIBRARY, "audio")
@@ -71,7 +111,10 @@ DEFAULT_CAM = os.environ.get("VR09_CAM") or os.environ.get("VR09_CAM_URL") or (
 # Preview: MIDI channels 2, 3 and 4 (zero-based 1, 2, 3) are the pedal, lower and upper parts in Mode 2.
 PREVIEW_CHANNELS = (1, 2, 3)
 PREVIEW_VELOCITY = 90
-STYLES = {"chord": [60, 64, 67], "pad": [48, 55, 64, 67], "bass": [36], "lead": [67]}
+DRUMS = "drums"
+DRUM_CHANNEL = 10   # MIDI channel 11 is the drum part in Mode 2
+DRUM_PATTERN = [36, 42, 38, 42]  # kick, closed hi-hat, snare, closed hi-hat, a quarter second apart
+STYLES = {"chord": [60, 64, 67], "pad": [48, 55, 64, 67], "bass": [36], "lead": [67], "drums": DRUMS}
 NOTE_LENGTH = 0.5   # seconds the notes are held
 LEAD_IN = 0.4       # seconds of recording before the notes, so the interface's start-up click is skipped
 SKIP = 0.15         # seconds at the start of the recording that are ignored when looking for sound
@@ -226,16 +269,74 @@ def take_photo(camera, path, crop=None, exposure=EXPOSURE):
         Image.open(path).crop((x, y, x + w, y + h)).save(path)
 
 
-def ocr(path):
-    """A hint only: this screen font is too small for Tesseract to read reliably."""
-    import pytesseract
-    from PIL import Image, ImageOps, ImageStat
+def env_value(name):
+    """A variable from the environment, or else from ENV_FILE. Only the line for that name is read."""
+    if os.environ.get(name):
+        return os.environ[name]
+    if os.path.exists(ENV_FILE):
+        pattern = r"""^\s*(?:export\s+)?""" + re.escape(name) + r"""\s*=\s*(["']?)(.*?)\1\s*$"""
+        with open(ENV_FILE) as f:
+            for line in f:
+                match = re.match(pattern, line)
+                if match:
+                    return match.group(2)
+    return None
 
-    image = ImageOps.grayscale(Image.open(path))
-    image = image.resize((image.width * 3, image.height * 3))
-    if ImageStat.Stat(image).mean[0] < 110:
-        image = ImageOps.invert(image)
-    return pytesseract.image_to_string(image, config="--psm 6").strip()
+
+def read_screen(path, model=VISION_MODEL):
+    """Read the screen photo with Claude and return {"slot", "name", "tone", "effect", "level", "other"}.
+
+    Tesseract cannot read this small bitmap font, so the photo is sent to the Anthropic API.
+    """
+    import anthropic
+
+    key = env_value("ANTHROPIC_API_KEY")
+    if not key:
+        raise RuntimeError(f"no ANTHROPIC_API_KEY in the environment or in {ENV_FILE}")
+    # A key that is not tied to a workspace needs the workspace named in a header.
+    workspace = env_value("ANTHROPIC_WORKSPACE_ID")
+    headers = {"anthropic-workspace-id": workspace} if workspace else None
+    import io
+
+    from PIL import Image
+
+    def encode(image):
+        buffer = io.BytesIO()
+        image.convert("RGB").save(buffer, "JPEG", quality=92)
+        return base64.standard_b64encode(buffer.getvalue()).decode()
+
+    screen = Image.open(path)
+    # The title row is the hardest part to read, so it is also sent enlarged.
+    w, h = screen.size
+    title = screen.crop((int(0.12 * w), int(0.25 * h), int(0.80 * w), int(0.47 * h)))
+    title = title.resize((title.width * 4, title.height * 4), Image.LANCZOS)
+    images = [
+        {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": encode(screen)}},
+        {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": encode(title)}},
+    ]
+    # Reading a few words does not need deep thinking; Haiku does not take an effort setting.
+    extra = {} if "haiku" in model else {"output_config": {"effort": os.environ.get("VR09_VISION_EFFORT", "low")}}
+    response = anthropic.Anthropic(api_key=key, default_headers=headers).messages.create(
+        model=model,
+        max_tokens=2000,
+        **extra,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    *images,
+                    {"type": "text", "text": SCREEN_PROMPT},
+                ],
+            }
+        ],
+    )
+    text = next((b.text for b in response.content if b.type == "text"), "")
+    start, end = text.find("{"), text.rfind("}")
+    if start < 0 or end < start:
+        raise RuntimeError(f"no JSON in the reply: {text[:80]!r}")
+    reading = json.loads(text[start : end + 1])
+    print(f"screen read by {model} ({response.usage.input_tokens} tokens in, {response.usage.output_tokens} out)")
+    return {k: str(reading.get(k, "")).strip() for k in ("slot", "name", "tone", "effect", "level", "other")}
 
 
 def photo(camera, crop, exposure=EXPOSURE):
@@ -244,9 +345,9 @@ def photo(camera, crop, exposure=EXPOSURE):
     take_photo(camera, path, crop, exposure)
     print(f"saved {path}")
     try:
-        print(f"OCR read: {ocr(path)!r}")
+        print("screen reads:", read_screen(path))
     except Exception as e:
-        print(f"OCR failed ({e})", file=sys.stderr)
+        print(f"could not read the screen ({e})", file=sys.stderr)
 
 
 # Audio preview ---------------------------------------------------------------------------------
@@ -332,20 +433,27 @@ def record_preview(path, notes, device=None, manual_seconds=4.0):
     info = sd.query_devices(index, "input")
     rate = int(info["default_samplerate"])
     channels = 2 if info["max_input_channels"] >= 2 else 1
-    seconds = manual_seconds if notes is None else LEAD_IN + NOTE_LENGTH + MAX_LENGTH + 0.5
+    seconds = manual_seconds if notes is None else LEAD_IN + (1.0 if notes == DRUMS else NOTE_LENGTH) + MAX_LENGTH + 0.5
     print(f"recording from {info['name']}" + (", play now" if notes is None else f", playing {notes}"), flush=True)
     audio = sd.rec(int(seconds * rate), samplerate=rate, channels=channels, device=index)
     if notes is not None:
         fd = vr09.open_device(vr09.find_port())
         try:
             time.sleep(LEAD_IN)
-            for ch in PREVIEW_CHANNELS:
-                for n in notes:
-                    os.write(fd, bytes([0x90 | ch, n, PREVIEW_VELOCITY]))
-            time.sleep(NOTE_LENGTH)
-            for ch in PREVIEW_CHANNELS:
-                for n in notes:
-                    os.write(fd, bytes([0x80 | ch, n, 0]))
+            if notes == DRUMS:
+                for n in DRUM_PATTERN:
+                    os.write(fd, bytes([0x90 | DRUM_CHANNEL, n, 100]))
+                    time.sleep(0.1)
+                    os.write(fd, bytes([0x80 | DRUM_CHANNEL, n, 0]))
+                    time.sleep(0.15)
+            else:
+                for ch in PREVIEW_CHANNELS:
+                    for n in notes:
+                        os.write(fd, bytes([0x90 | ch, n, PREVIEW_VELOCITY]))
+                time.sleep(NOTE_LENGTH)
+                for ch in PREVIEW_CHANNELS:
+                    for n in notes:
+                        os.write(fd, bytes([0x80 | ch, n, 0]))
         finally:
             os.close(fd)
     sd.wait()
@@ -389,63 +497,179 @@ def preview_again(key, style_text, device):
         save_catalog(patches)
 
 
+def reread(everything, model=VISION_MODEL):
+    """Read the saved photos again and refresh tone, effect, level and other. Titles are never changed."""
+    patches = load_catalog()
+    done = 0
+    for key, entry in patches.items():
+        if entry.get("reviewed") and not everything:
+            continue
+        photo_path = files(key)["photo"]
+        if not os.path.exists(photo_path):
+            continue
+        try:
+            reading = read_screen(photo_path, model)
+        except Exception as e:
+            print(f"{key}: not read ({e})", file=sys.stderr)
+            continue
+        entry.update({k: reading.get(k, "") for k in ("tone", "effect", "level", "other")})
+        entry["screen_slot"] = reading.get("slot", "")
+        done += 1
+        if done % 10 == 0:
+            save_catalog(patches)
+    save_catalog(patches)
+    print(f"{done} patches read again")
+
+
+def unique_key(key, patches):
+    """Add _2, _3... when a patch with this key was captured already."""
+    candidate, n = key, 1
+    while candidate in patches or os.path.exists(files(candidate)["dump"]):
+        n += 1
+        candidate = f"{key}_{n}"
+    return candidate
+
+
+def sync():
+    """After editing titles in the catalog, rename the files and keys to match them."""
+    for key, entry in list(load_catalog().items()):
+        title = entry.get("title", "")
+        if title and safe(title) != key:
+            try:
+                rename(key, title)
+            except SystemExit as e:
+                print(f"skipped {key}: {e}", file=sys.stderr)
+
+
 # Capture loop ----------------------------------------------------------------------------------
 
 
-def capture(camera, use_camera, crop, use_audio, audio_device, exposure, default_style):
-    os.makedirs(PHOTOS, exist_ok=True)
-    os.makedirs(AUDIO, exist_ok=True)
-    patches = load_catalog()
+def capture_one(patches, label, camera, use_camera, crop, use_audio, audio_device, exposure, default_style, auto, use_vision, vision_model):
+    """Capture the patch the keyboard is on, as the slot called label (such as 4-2). Returns False to stop.
 
-    while True:
-        ask("\nRecall the next patch on the keyboard panel, then press Enter: ")
+    The bank and slot come from the caller's count, not from the screen: the small font makes the model
+    misread the digits. Only the name, tone and effect are read from the screen.
 
-        ocr_text = ""
-        tmp_photo = None
+    Whatever fails, the files of this patch are removed again, so the library never holds a half patch.
+    """
+    reading = {}
+    tmp_photo = os.path.join(PHOTOS, "_tmp.jpg") if use_camera else None
+    created = []
+    try:
         if use_camera:
-            tmp_photo = os.path.join(PHOTOS, "_tmp.jpg")
             try:
                 take_photo(camera, tmp_photo, crop, exposure)
-                ocr_text = ocr(tmp_photo)
+                if use_vision:
+                    reading = read_screen(tmp_photo, vision_model)
             except Exception as e:
-                print(f"camera/OCR failed ({e})", file=sys.stderr)
+                print(f"camera or screen reading failed ({e})", file=sys.stderr)
                 if not os.path.exists(tmp_photo):
                     tmp_photo = None
 
-        hint = f" (OCR guess: {ocr_text!r})" if ocr_text else ""
-        name = ask(f"Name{hint}. Enter to name it later from the photo, q to stop: ").strip()
-        if name.lower() == "q":
-            if tmp_photo and os.path.exists(tmp_photo):
-                os.remove(tmp_photo)
-            break
-        key = safe(name) if name else "unnamed_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        if reading.get("slot") and reading["slot"] != label:
+            print(f"note: the screen was read as {reading['slot']} but this is {label}; keeping {label}")
+        guess = " ".join(part for part in (label, reading.get("name")) if part)
+        if auto:
+            name = guess
+        else:
+            answer = ask(f"Name [{guess or 'none read'}]: Enter to accept, type to replace, q to stop: ").strip()
+            if answer.lower() == "q":
+                return False
+            name = answer or guess
+        key = unique_key(safe(name) if name else "unnamed_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S"), patches)
+
+        # The dump comes first: it is the part that matters, and the patch is dropped if it fails.
+        print("reading the dump over MIDI...")
+        created.append(files(key)["dump"])
+        vr09.dump(key)
 
         style = "skip"
         if use_audio:
-            style, notes = ask_style(default_style)
+            if "kit" in reading.get("tone", "").lower() and default_style == "chord":
+                default_style = "drums"  # a drum kit makes no sound on the parts the chord is sent to
+            style, notes = parse_style(default_style, "chord") if auto else ask_style(default_style)
             if style != "skip":
+                created.append(files(key)["audio"])
                 try:
                     record_preview(files(key)["audio"], notes, audio_device)
                 except Exception as e:
                     print(f"audio recording failed ({e}), continuing without a preview", file=sys.stderr)
-
-        if tmp_photo:
+        if tmp_photo and os.path.exists(tmp_photo):
+            created.append(files(key)["photo"])
             os.replace(tmp_photo, files(key)["photo"])
 
-        print("reading the dump over MIDI...")
-        vr09.dump(key)
-
-        previous = patches.get(key, {})
         patches[key] = {
             "title": name,
             "captured": datetime.datetime.now().isoformat(timespec="seconds"),
             "preview": style,
-            "tags": previous.get("tags", []),
-            "notes": previous.get("notes", ""),
-            "ocr_hint": ocr_text,
+            "tags": [],
+            "notes": "",
+            "tone": reading.get("tone", ""),
+            "effect": reading.get("effect", ""),
+            "level": reading.get("level", ""),
+            "other": reading.get("other", ""),
+            "screen_slot": reading.get("slot", ""),
+            "reviewed": not (bool(guess) and name == guess) and bool(name),
         }
         save_catalog(patches)
         print(f"saved as {key}" + (f" ('{name}')" if name else ", name it later with: rename"))
+        return True
+    except BaseException:
+        for path in created:
+            if os.path.exists(path):
+                os.remove(path)
+        raise
+    finally:
+        if tmp_photo and os.path.exists(tmp_photo):
+            os.remove(tmp_photo)
+
+
+def parse_slot(text):
+    """Read a label such as 4-2 into (bank, slot), or None."""
+    match = re.fullmatch(r"\s*(\d+)\s*-\s*(\d+)\s*", text)
+    return (int(match.group(1)), int(match.group(2))) if match else None
+
+
+def next_slot(bank, slot, per_bank):
+    return (bank, slot + 1) if slot < per_bank else (bank + 1, 1)
+
+
+def derive_start(patches, per_bank):
+    """The slot after the most recently captured one, or 1-1 for an empty library."""
+    if not patches:
+        return 1, 1
+    latest = max(patches.values(), key=lambda e: e["captured"])
+    match = re.match(r"\s*(\d+\s*-\s*\d+)", latest["title"])
+    found = parse_slot(match.group(1)) if match else None
+    return next_slot(*found, per_bank) if found else (1, 1)
+
+
+def capture(camera, use_camera, crop, use_audio, audio_device, exposure, default_style, auto=False, use_vision=True, vision_model=VISION_MODEL, start=None, per_bank=4):
+    os.makedirs(PHOTOS, exist_ok=True)
+    os.makedirs(AUDIO, exist_ok=True)
+    patches = load_catalog()
+    bank, slot = parse_slot(start) if start else derive_start(patches, per_bank)
+    print(f"starting at {bank}-{slot}, {per_bank} patches per bank (change it with --start BANK-SLOT or by typing a slot below)")
+    try:
+        while True:
+            answer = ask(f"\nRecall {bank}-{slot} on the keyboard panel, then press Enter (or type a slot such as 2-3, q to stop): ")
+            if answer.strip().lower() == "q":
+                break
+            jump = parse_slot(answer)
+            if jump:
+                bank, slot = jump
+            elif answer.strip():
+                print("not understood: press Enter, type a slot like 2-3, or q")
+                continue
+            try:
+                if not capture_one(patches, f"{bank}-{slot}", camera, use_camera, crop, use_audio, audio_device, exposure, default_style, auto, use_vision, vision_model):
+                    break
+                bank, slot = next_slot(bank, slot, per_bank)
+            except (Exception, SystemExit) as e:
+                # One bad patch must not end the session: say what failed and ask for the same slot again.
+                print(f"patch skipped, nothing was saved for it: {e}", file=sys.stderr)
+    except KeyboardInterrupt:
+        print("\nstopped, the patches saved so far are in the catalog")
 
 
 def parse_crop(text):
@@ -462,6 +686,10 @@ if __name__ == "__main__":
         list_inputs()
     elif command == "unnamed":
         list_unnamed()
+    elif command == "sync":
+        sync()
+    elif command == "reread":
+        reread("--all" in args, args[args.index("--vision-model") + 1] if "--vision-model" in args else VISION_MODEL)
     elif command == "rename" and len(args) == 3:
         rename(args[1], args[2])
     elif command == "preview" and len(args) >= 2:
@@ -473,7 +701,9 @@ if __name__ == "__main__":
         preview_again(args[1], rest[0] if rest else None, device)
     elif command in ("capture", "photo"):
         camera, crop, exposure = DEFAULT_CAM, None, EXPOSURE
-        use_camera, use_audio, default_style = True, True, "chord"
+        use_camera, use_audio, default_style, auto = True, True, "chord", False
+        use_vision, vision_model = True, VISION_MODEL
+        start, per_bank = None, 4
         audio_device = os.environ.get("VR09_AUDIO_DEVICE")
         i = 1
         while i < len(args):
@@ -492,6 +722,18 @@ if __name__ == "__main__":
                 audio_device, i = args[i + 1], i + 2
             elif option == "--style" and command == "capture":
                 default_style, i = args[i + 1], i + 2
+            elif option == "--auto" and command == "capture":
+                auto, i = True, i + 1
+            elif option == "--start" and command == "capture":
+                start, i = args[i + 1], i + 2
+                if not parse_slot(start):
+                    sys.exit("--start takes BANK-SLOT, such as 5-1")
+            elif option == "--per-bank" and command == "capture":
+                per_bank, i = int(args[i + 1]), i + 2
+            elif option == "--no-vision" and command == "capture":
+                use_vision, i = False, i + 1
+            elif option == "--vision-model" and command == "capture":
+                vision_model, i = args[i + 1], i + 2
             else:
                 sys.exit(f"unknown argument: {option}")
         if command == "photo":
@@ -499,6 +741,6 @@ if __name__ == "__main__":
         else:
             if not parse_style(default_style, "chord"):
                 sys.exit(f"unknown style {default_style!r}")
-            capture(camera, use_camera, crop, use_audio, audio_device, exposure, default_style)
+            capture(camera, use_camera, crop, use_audio, audio_device, exposure, default_style, auto, use_vision, vision_model, start, per_bank)
     else:
         sys.exit(__doc__)

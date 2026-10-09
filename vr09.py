@@ -9,6 +9,7 @@
                         between (default: every dump in the folder, slower the more there are)
   vr09.py watch         dump repeatedly and print every change as it happens
 """
+import errno
 import json
 import os
 import select
@@ -84,7 +85,17 @@ def find_port():
 def open_device(port):
     """Open the raw ALSA MIDI device behind an amidi port name such as hw:2,0,0."""
     card, device, _ = port[3:].split(",")
-    return os.open(f"/dev/snd/midiC{card}D{device}", os.O_RDWR | os.O_NONBLOCK)
+    path = f"/dev/snd/midiC{card}D{device}"
+    deadline = time.time() + 3
+    while True:
+        try:
+            return os.open(path, os.O_RDWR | os.O_NONBLOCK)
+        except OSError as e:
+            if e.errno != errno.EBUSY:
+                raise
+            if time.time() > deadline:
+                raise RuntimeError(f"{path} is used by another program, see: fuser -v {path}") from e
+            time.sleep(0.2)  # another step of this program may be closing it
 
 
 def rq1(fd, address, size, kind="kb"):
@@ -142,7 +153,11 @@ def snapshot(fd, verbose=False):
 
 
 def dump(name):
-    result = snapshot(open_device(find_port()), verbose=True)
+    fd = open_device(find_port())
+    try:
+        result = snapshot(fd, verbose=True)
+    finally:
+        os.close(fd)
     os.makedirs("dumps", exist_ok=True)
     with open(f"dumps/{name}.json", "w") as f:
         json.dump(result, f, indent=0, sort_keys=True)

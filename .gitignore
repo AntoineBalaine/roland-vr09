@@ -7,3 +7,4 @@ dumps/verify*.json
 library/photos/
 library/audio/
 .venv/
+library/catalog.yaml.bak
