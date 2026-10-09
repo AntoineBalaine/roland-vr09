@@ -4,3 +4,5 @@ dumps/now*.json
 dumps/after*.json
 dumps/back*.json
 dumps/verify*.json
+library/photos/
+library/audio/

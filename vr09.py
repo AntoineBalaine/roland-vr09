@@ -208,7 +208,11 @@ def recall(name):
     The current state is not read: writing the target's value at all of those addresses gives the
     same result whatever registration is loaded.
     """
-    saved = {os.path.basename(f)[:-5]: json.load(open(f"dumps/{f}")) for f in os.listdir("dumps") if f.startswith("reg")}
+    saved = {
+        os.path.basename(f)[:-5]: json.load(open(f"dumps/{f}"))
+        for f in os.listdir("dumps")
+        if f.endswith(".json")
+    }
     fd = open_device(find_port())
     start = time.time()
     write_differences(fd, saved[name], {}, only=varying_keys(list(saved.values())))
