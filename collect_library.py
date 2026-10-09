@@ -21,6 +21,8 @@ preview that the tool plays itself over MIDI, one patch at a time.
                                               refused while a capture is running. Same as: cd web && npm start
   collect_library.py setlist [FILE]           write a setlist file with every patch in order (default
                                               setlist.txt) for pedal_scenes.py
+  collect_library.py convert-audio            convert WAV previews to Ogg Vorbis (the WAVs move to
+                                              library/audio-wav/), checking each one decodes the same
   collect_library.py sync                     after editing titles in library/catalog.yaml, rename the keys and
                                               files to match them
   collect_library.py unnamed                  list the patches still named unnamed_...
@@ -60,7 +62,8 @@ most 2 seconds and fades the end out. Only the parts the patch uses make a sound
 Each captured patch writes:
   dumps/<key>.json          parameter dump, same format as vr09.py dump
   library/photos/<key>.jpg  the screen photo (if a camera was used)
-  library/audio/<key>.wav   the audio preview
+  library/audio/<key>.ogg   the audio preview, Ogg Vorbis (library/audio-wav/ holds the lossless
+                            WAV originals of the first 70, kept out of git)
   library/catalog.yaml      one entry per patch, meant to be edited by hand; the three files above are
                             found from the entry's key, so rename entries with the rename command
 
@@ -149,7 +152,7 @@ def files(key):
     return {
         "dump": f"dumps/{key}.json",
         "photo": os.path.join(PHOTOS, f"{key}.jpg"),
-        "audio": os.path.join(AUDIO, f"{key}.wav"),
+        "audio": os.path.join(AUDIO, f"{key}.ogg"),
     }
 
 
@@ -196,7 +199,7 @@ def save_catalog(patches):
         f.write(
             "# Patch library, written by collect_library.py. Edit title, tags and notes freely.\n"
             "# The key of an entry is the stem of its files: dumps/<key>.json, library/photos/<key>.jpg and\n"
-            "# library/audio/<key>.wav. To rename an entry, use: collect_library.py rename OLD NEW\n"
+            "# library/audio/<key>.ogg. To rename an entry, use: collect_library.py rename OLD NEW\n"
         )
         yaml.safe_dump({"patches": patches}, f, sort_keys=False, allow_unicode=True, default_flow_style=False, width=100)
     os.replace(temporary, CATALOG)  # a crash cannot leave half a catalog
@@ -481,7 +484,7 @@ def record_preview(path, notes, device=None, manual_seconds=4.0):
         print(f"warning: no sound heard (peak {peak:.1f} dBFS): check the cable, the gain and the notes", file=sys.stderr)
         return False
     clip, cut = result
-    sf.write(path, clip, rate)
+    sf.write(path, clip, rate, format="OGG", subtype="VORBIS")  # about a tenth of the size of a WAV
     print(f"saved {len(clip) / rate:.2f}s preview, peak {peak:.1f} dBFS, {cut:.2f}s of silence cut at the start")
     return True
 
@@ -578,6 +581,40 @@ def serve(options):
         sys.exit(subprocess.run(command, env=env).returncode)
     except KeyboardInterrupt:
         sys.exit(0)
+
+
+def convert_audio():
+    """Convert the WAV previews in library/audio to Ogg Vorbis and move the WAVs to library/audio-wav.
+
+    Each conversion is decoded again and compared with the original (same length and level) before
+    its WAV is moved; a preview that does not match keeps its WAV and is reported.
+    """
+    import numpy as np
+    import soundfile as sf
+
+    archive = os.path.join(LIBRARY, "audio-wav")
+    os.makedirs(archive, exist_ok=True)
+    converted, failed, wav_bytes, ogg_bytes = 0, [], 0, 0
+    for name in sorted(os.listdir(AUDIO)):
+        if not name.endswith(".wav"):
+            continue
+        wav = os.path.join(AUDIO, name)
+        ogg = wav[:-4] + ".ogg"
+        data, rate = sf.read(wav)
+        sf.write(ogg, data, rate, format="OGG", subtype="VORBIS")
+        back, back_rate = sf.read(ogg)
+        level = lambda x: 20 * np.log10(max(float(np.sqrt((x**2).mean())), 1e-9))
+        if back_rate != rate or abs(len(back) - len(data)) > 64 or abs(level(back) - level(data)) > 0.5:
+            failed.append(f"{name}: {len(data)} -> {len(back)} samples, {level(data):.1f} -> {level(back):.1f} dB")
+            os.remove(ogg)
+            continue
+        wav_bytes += os.path.getsize(wav)
+        ogg_bytes += os.path.getsize(ogg)
+        os.replace(wav, os.path.join(archive, name))
+        converted += 1
+    print(f"{converted} previews converted: {wav_bytes / 1e6:.1f} MB of WAV -> {ogg_bytes / 1e6:.2f} MB of Ogg; the WAVs are in {archive}")
+    for line in failed:
+        print(f"NOT converted, WAV kept: {line}", file=sys.stderr)
 
 
 def unique_key(key, patches):
@@ -747,6 +784,8 @@ if __name__ == "__main__":
         list_unnamed()
     elif command == "sync":
         sync()
+    elif command == "convert-audio":
+        convert_audio()
     elif command in ("serve", "review"):
         serve(args[1:])
     elif command == "setlist":

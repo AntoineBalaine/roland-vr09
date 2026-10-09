@@ -1,6 +1,6 @@
 # Patch library, written by collect_library.py. Edit title, tags and notes freely.
 # The key of an entry is the stem of its files: dumps/<key>.json, library/photos/<key>.jpg and
-# library/audio/<key>.wav. To rename an entry, use: collect_library.py rename OLD NEW
+# library/audio/<key>.ogg. To rename an entry, use: collect_library.py rename OLD NEW
 patches:
   1-1_MassiveOrgDF:
     title: 1-1 MassiveOrgDF

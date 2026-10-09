@@ -16,7 +16,7 @@ const EDITABLE = ["title", "tone", "effect", "level", "other", "notes"] as const
 const HEADER =
   "# Patch library, written by collect_library.py. Edit title, tags and notes freely.\n" +
   "# The key of an entry is the stem of its files: dumps/<key>.json, library/photos/<key>.jpg and\n" +
-  "# library/audio/<key>.wav. To rename an entry, use: collect_library.py rename OLD NEW\n";
+  "# library/audio/<key>.ogg. To rename an entry, use: collect_library.py rename OLD NEW\n";
 
 export interface CatalogEntry {
   title: string;
@@ -65,7 +65,7 @@ export const safe = (name: string): string =>
 const filesOf = (key: string) => ({
   dump: path.join(DUMPS, `${key}.json`),
   photo: path.join(MEDIA.photos, `${key}.jpg`),
-  audio: path.join(MEDIA.audio, `${key}.wav`),
+  audio: path.join(MEDIA.audio, `${key}.ogg`),
 });
 
 // Catalog ---------------------------------------------------------------------------------------
@@ -169,7 +169,7 @@ export function pageData(): PageData {
       tags: (e.tags ?? []).map(String),
       reviewed: Boolean(e.reviewed),
       photo: fs.existsSync(f.photo) ? `photos/${encodeURIComponent(key)}.jpg` : "",
-      audio: fs.existsSync(f.audio) ? `audio/${encodeURIComponent(key)}.wav` : "",
+      audio: fs.existsSync(f.audio) ? `audio/${encodeURIComponent(key)}.ogg` : "",
     };
   }
   return data;
@@ -289,7 +289,7 @@ export function media(request: Request, kind: keyof typeof MEDIA, name: string):
       throw new HttpError(404, "not found");
     }
     const data = fs.readFileSync(full);
-    const type = path.extname(full) === ".jpg" ? "image/jpeg" : path.extname(full) === ".wav" ? "audio/wav" : "application/octet-stream";
+    const type = path.extname(full) === ".jpg" ? "image/jpeg" : path.extname(full) === ".ogg" ? "audio/ogg" : "application/octet-stream";
     const range = /^bytes=(\d*)-(\d*)$/.exec(request.headers.get("range") ?? "");
     if (range && (range[1] || range[2])) {
       const start = range[1] ? Number(range[1]) : Math.max(0, data.length - Number(range[2]));
