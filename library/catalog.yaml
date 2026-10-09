@@ -19,132 +19,143 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Jazz Organ
-    effect: HEMI-CHORUS
-    level: 0 12
-    other: (D) I I I
+    tone: Jazz Organ +
+    effect: HERO HEMI-CHORUS
+    level: 0 12 / 1
+    other: ''
     reviewed: false
+    screen_slot: 1-2
   2-1_Piano_Org:
     title: 2-1 Piano+Org
     captured: '2026-10-09T17:27:01'
     preview: chord
     tags: []
     notes: ''
-    tone: Rock Organ III
+    tone: Rock Organ III + GrandPiano()
     effect: HEXA-CHORUS
-    level: 0 12
-    other: GrandPiano() -1 11
+    level: 0 12 / -1 11
+    other: DF
     reviewed: false
+    screen_slot: 2-1
   2-2_Ueuo_Piano:
     title: 2-2 Ueuo Piano
     captured: '2026-10-09T17:27:23'
     preview: chord
     tags: []
     notes: ''
-    tone: Rock Organ
+    tone: Rock Organ 1 + Mono Piano
     effect: CHORUS
-    level: DF
-    other: Rock Organ 0 D 12, Mono Piano -1 9, NEXT CHORUS
+    level: 0 12 / -1 9
+    other: DF
     reviewed: false
+    screen_slot: 12-24
   3-1_Chowii_EP:
     title: 3-1 Chowii EP
     captured: '2026-10-09T17:28:00'
     preview: chord
     tags: []
     notes: ''
-    tone: +Phase EP
+    tone: +Phase EP + '60s E.Piano
     effect: SMALL PHASER 1
-    level: 0 11
-    other: '''60s E. Piano 0 6'
+    level: 0 11 / 0 6
+    other: ''
     reviewed: false
+    screen_slot: 1-1
   3-2_SHOOP_EP:
     title: 3-2 SHOOP_EP
     captured: '2026-10-09T17:28:12'
     preview: chord
     tags: []
     notes: ''
-    tone: Tremolo EP2 0 12
-    effect: TREMOLO 2
-    level: DF
-    other: ''
+    tone: Tremolo EP2 + Tremolo 2
+    effect: ''
+    level: 0 12 /
+    other: DF
     reviewed: false
+    screen_slot: 1-2
   3-3_H8dr10_EP:
     title: 3-3 H8dr10_EP
     captured: '2026-10-09T17:28:58'
     preview: chord
     tags: []
     notes: ''
-    tone: iPure EP
+    tone: Pure EP + FM EP 1
     effect: HEXA-CHORUS
-    level: ''
-    other: FM EP 1
+    level: 0 3 / 0 7
+    other: ''
     reviewed: false
+    screen_slot: 1-1
   3-4_CITY_Eng__OF:
     title: 3-4 CITY Eng. OF
     captured: '2026-10-09T17:29:23'
     preview: chord
     tags: []
     notes: ''
-    tone: Ar11Clav 0B -1 10
+    tone: Br11Clav 08 + Halo Clav
     effect: SMALL PHASER 1
-    level: -1 10
-    other: Halo Clav
+    level: -1 10 / -1 10
+    other: ''
     reviewed: false
+    screen_slot: 1-4
   4-1_NowJazz01_DF:
     title: 4-1 NowJazz01.DF
     captured: '2026-10-09T17:31:16'
     preview: chord
     tags: []
     notes: ''
-    tone: 80s Brss 2
+    tone: 80s Brss 2 + Finger Bs
     effect: TREMOLO 2
-    level: 0 12
-    other: Finger Bs -1 9
+    level: 0 12 / -1 9
+    other: ''
     reviewed: false
+    screen_slot: 1-1
   4-2_Nylon-Grande:
     title: 4-2 Nylon-Grande
     captured: '2026-10-09T17:31:31'
     preview: chord
     tags: []
     notes: ''
-    tone: Nylon-str.Gt -1 12
+    tone: Nylon-str.GL -1 12 + Full Strings -1 5
     effect: D
-    level: Full Strings -1 5
-    other: MFX MODULATION D
+    level: -1 12 / -1 5
+    other: EDIT MODE
     reviewed: false
+    screen_slot: 1-24
   4-3_SUBTROIR_DF:
     title: 4-3 SUBTROIR DF
     captured: '2026-10-09T17:31:51'
     preview: chord
     tags: []
     notes: ''
-    tone: Steel-tr.Gt -1 11
-    effect: ''
-    level: -1 10
-    other: Picked B4, MFX CHORUS
+    tone: Steel-tr.Gt -1 11 + Picked Bs -1 10
+    effect: HEX CHORUS
+    level: -1 11 / -1 10
+    other: ''
     reviewed: false
+    screen_slot: 1-1
   4-4_Riepingl_d_DF:
     title: 4-4 Riepingl d DF
     captured: '2026-10-09T17:32:06'
     preview: chord
     tags: []
     notes: ''
-    tone: LP Dist
+    tone: LP Dist + Punker
     effect: DISTORTION
-    level: 0 12
-    other: Punker 0 8
+    level: 0 12 / 0 8
+    other: ''
     reviewed: false
+    screen_slot: 1-4
   5-1_Wamm_Jamm_DF:
     title: 5-1 Wamm Jamm DF
     captured: '2026-10-09T17:35:06'
     preview: chord
     tags: []
     notes: ''
-    tone: BluesHarp
+    tone: BluesHarp + Finger Bs
     effect: PHASER
-    level: 0 3
-    other: Finger Bs -1 7
-    screen_slot: '1'
+    level: 0 3 / -1 7
+    other: ''
+    screen_slot: 1-1
     reviewed: false
   5-2_Solo_Sax:
     title: 5-2 Solo Sax
@@ -152,11 +163,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: nAlto Sax
-    effect: '0'
-    level: '-112'
-    other: OF BETTER MFX MODULATION
-    screen_slot: U-2
+    tone: Alto Sax
+    effect: MODULATION 0
+    level: -1 12
+    other: OF BETTER
+    screen_slot: 0-2
     reviewed: false
   5-3_Video_DeSROF:
     title: 5-3 Video DeSROF
@@ -164,10 +175,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Ultraphone
+    tone: Ultraphone + AL AcousticBs
     effect: TREMOLO 2
-    level: 0 12
-    other: NL Acoust LCBs 0 8
+    level: 0 12 / 0 8
+    other: ''
     screen_slot: 1-1
     reviewed: false
   5-4_Accordion_DF:
@@ -176,10 +187,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Fr Musset
+    tone: Fr Musset + Accordion
     effect: CHORUS
-    level: 0 12
-    other: Accordion
+    level: 0 12 / 0 10
+    other: ''
     screen_slot: 1-4
     reviewed: false
   6-1_PowerNormOF:
@@ -188,10 +199,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: SlackTp Sect
+    tone: SlackTp Sect 1 + FS Brass
     effect: CHORUS
-    level: ''
-    other: PS Brass
+    level: 0 11 / 0 11
+    other: ''
     screen_slot: 0-1
     reviewed: false
   6-2_Snowflor_me_DF:
@@ -200,10 +211,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Solo Tb
+    tone: Solo Tb + FS Brass
     effect: MODULATION D
-    level: '-1.9'
-    other: F5 Brass 0.9
+    level: -1 9 / 0 9
+    other: ''
     screen_slot: 0-21
     reviewed: false
   6-3_Warnings_UF:
@@ -212,11 +223,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: StackTp Sect -1 10
+    tone: StackTp Sect 1 + Soft Tb
     effect: PITCH SHIFTER
-    level: -1 10
-    other: Soft Tb -1 10
-    screen_slot: 0-0
+    level: -1 10 / -1 10
+    other: UF
+    screen_slot: 0-9
     reviewed: false
   6-4_Bax80eLi0nDF:
     title: 6-4 Bax80eLi0nDF
@@ -224,10 +235,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Blor Sax
-    effect: '0'
-    level: -1 10
-    other: Soprano Sax -1 11
+    tone: Bleu Sax + Soprano Sax
+    effect: MODULATION 0
+    level: -1 10 / -1 11
+    other: ''
     screen_slot: 1-4
     reviewed: false
   7-1_UsoCUYUFF_OF:
@@ -236,11 +247,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: 04 UP8S1iPd
+    tone: UP8511Pd + Strings
     effect: MODULATION 0
-    level: 0 10
-    other: 03 Strings
-    screen_slot: '1'
+    level: 1 6 / 0 10
+    other: ''
+    screen_slot: 1-1
     reviewed: false
   7-2_Cello_Ens_DF:
     title: 7-2 Cello+Ens.DF
@@ -248,10 +259,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Cello
-    effect: MODULATION D
-    level: 0 8
-    other: Dyn Strings -1 10
+    tone: Cello + Dyn Strings
+    effect: MODULATION 0
+    level: 0 8 / -1 10
+    other: ''
     screen_slot: 1-2
     reviewed: false
   7-3_Expres9str_OF:
@@ -260,10 +271,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Hood Strings -1 10
-    effect: '0'
-    level: 0 8
-    other: +SL UPOS11Pd
+    tone: Hood Strings -1 10 + SL UPOSTIPD 0 8
+    effect: MODULATION 0
+    level: -1 10 / 0 8
+    other: ''
     screen_slot: 1-01
     reviewed: false
   7-4_Orvice_Padde:
@@ -272,10 +283,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Sun Pad 2
+    tone: Sun Pad 2 + FX 1
     effect: CHORUS
-    level: -1 10
-    other: FX 1
+    level: -1 10 / -1 0
+    other: ''
     screen_slot: 1-4
     reviewed: false
   8-1_Lowsplit:
@@ -284,10 +295,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Fat Analog
+    tone: Fat Analog + Sun Pad 1
     effect: PITCH SHIFTER
-    level: '0.12'
-    other: Sun Pad 1
+    level: 0 12 / 1 7
+    other: ''
     screen_slot: 0-1
     reviewed: false
   8-2_Not_InLove:
@@ -296,10 +307,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Classical
+    tone: Classical + Choir
     effect: MODULATION 0
-    level: -1 11
-    other: Choir -1 12, DF
+    level: -1 11 / -1 12
+    other: DF
     screen_slot: 0-21
     reviewed: false
   8-3_JazzScate_OF:
@@ -308,10 +319,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Jazz Doo
-    effect: '0'
-    level: -1 10
-    other: Jazz Scal -1 10
+    tone: Jazz Doo + Jazz Scal
+    effect: MODULATION 0
+    level: -1 10 / -1 10
+    other: ''
     screen_slot: 0-20
     reviewed: false
   8-4_HauntedOrgOF:
@@ -320,10 +331,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Gospel Or.3
+    tone: Gospel Or.3 + Pipe Organ3
     effect: HEXA-CHORUS
-    level: 0 12
-    other: Pipe Organ3 1 10
+    level: 0 12 / 1 10
+    other: ''
     screen_slot: 0-1
     reviewed: false
   9-1_LongDivision:
@@ -332,10 +343,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Sun Strings1
-    effect: '0'
-    level: -1 10
-    other: JP8 Brass -1 10, MFX MODULATION 0
+    tone: Sun Strings1 + JP8 Brass
+    effect: MODULATION 0
+    level: 0 10 / -1 10
+    other: ''
     screen_slot: 0-1
     reviewed: false
   9-2_808PwrLUVP:
@@ -344,11 +355,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: GrandPianoU
+    tone: GrandPianoU + 08 Strings
     effect: '0'
-    level: -1 10
-    other: 06 Strings -1 0
-    screen_slot: D-2
+    level: -1 10 / -1 0
+    other: ''
+    screen_slot: 0-2
     reviewed: false
   9-3_Day_Area_D3:
     title: 9-3 Day Area D3
@@ -359,8 +370,8 @@ patches:
     tone: Rock Organ
     effect: PHASER
     level: '12'
-    other: III
-    screen_slot: 10-4
+    other: ''
+    screen_slot: U-4
     reviewed: false
   9-4_Orl_Bowld:
     title: 9-4 Orl Bowld
@@ -368,10 +379,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Saw Lead 1
+    tone: Saw Lead 1 + Super Saws
     effect: BIT CRASH
-    level: '0.10'
-    other: Super Saws -2.12
+    level: 0 10 / -2 12
+    other: ''
     screen_slot: 1-4
     reviewed: false
   10-1_TheWridgetUra:
@@ -380,10 +391,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: JP8 Brass
+    tone: JP8 Brass + JP8 Strings
     effect: PHASER
-    level: -1 10
-    other: JP8 Strings -1 10
+    level: -1 10 / -1 10
+    other: ''
     screen_slot: 10-1
     reviewed: false
   10-2_Sweet_Dream:
@@ -392,10 +403,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: JP8 Strings!
-    effect: '0'
-    level: 0 10
-    other: JP8 Brass! 0 10, HEX MODULATION 0
+    tone: JP8 Strings1 + JP8 Brass
+    effect: MODULATION 0
+    level: 0 10 / 0 10
+    other: ''
     screen_slot: 10-2
     reviewed: false
   10-3_BrassOrgan:
@@ -404,11 +415,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: FS Brass
+    tone: FS Brass + Rock Organ
     effect: RING MODULATOR
-    level: 0 10
-    other: Rock Organ [R] 0 12
-    screen_slot: 10-4
+    level: 0 10 / 0 12
+    other: ''
+    screen_slot: 10-1
     reviewed: false
   10-4_DoomDebro:
     title: 10-4 DoomDebro
@@ -416,11 +427,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: JP8 Brass
+    tone: JP8 Brass + Super Saws
     effect: SLICER
-    level: -1 10
-    other: Super Saws
-    screen_slot: U0-4
+    level: -1 10 / -1 10
+    other: ''
+    screen_slot: 10-4
     reviewed: false
   11-1_BlueJ_03:
     title: 11-1 BlueJ 03
@@ -429,9 +440,9 @@ patches:
     tags: []
     notes: ''
     tone: Rock Organ
-    effect: TWIN ROTRY
-    level: 0 12
-    other: IIIIII 0
+    effect: TWIN ROTARY
+    level: 0 12 / 0
+    other: BATTERY
     screen_slot: 1-1
     reviewed: false
   11-2_Proauer_03:
@@ -443,7 +454,7 @@ patches:
     tone: Rock Organ
     effect: RING MODULATOR
     level: '12'
-    other: 'MFX:'
+    other: Prologue 03
     screen_slot: 1-2
     reviewed: false
   11-3_Jazzer_B3:
@@ -454,8 +465,8 @@ patches:
     notes: ''
     tone: Jazz Organ
     effect: PHASER
-    level: 0 12
-    other: MFX
+    level: 0 12 / 0
+    other: ''
     screen_slot: 1-1
     reviewed: false
   11-4_Voxu:
@@ -464,11 +475,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Translator
+    tone: Transistor
     effect: SLICER
-    level: 0 10
-    other: Trans1st0r
-    screen_slot: 1-1
+    level: 0 10 / 0
+    other: ''
+    screen_slot: 1-4
     reviewed: false
   12-1_PnooBeolit:
     title: 12-1 PnooBeolit
@@ -476,11 +487,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: GrandPianoU
+    tone: GrandPianoU + AL Reeds LicBs
     effect: CHORUS
-    level: -1 10
-    other: AL Fleoust LlcBs -1 12
-    screen_slot: U2-1
+    level: -1 10 / -1 12
+    other: ''
+    screen_slot: 02-1
     reviewed: false
   12-2_EPb5Spill:
     title: 12-2 EPb5Spill
@@ -488,10 +499,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Vintage EP
+    tone: Vintage EP + N.Acoustic UcBs
     effect: TREMOLO 2
-    level: -1 10
-    other: N.AcousticBa -1 12
+    level: -1 10 / -1 12
+    other: ''
     screen_slot: 12-21
     reviewed: false
   12-3_DIMPnooBrill:
@@ -500,10 +511,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: GrandPiano1
+    tone: GrandPiano1 + SweepPad
     effect: PITCH SHIFTER
-    level: 0 8
-    other: SweepPad
+    level: 0 8 / 1 0
+    other: ''
     screen_slot: 12-01
     reviewed: false
   12-4_TrptPadSplit:
@@ -512,10 +523,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: N. Trumpet
+    tone: N. Trumpet + Soft Pad 1
     effect: MODULATION 0
-    level: 0 19
-    other: Soft Pad 1, 1 9
+    level: 0 10 / 1 9
+    other: ''
     screen_slot: 12-4
     reviewed: false
   13-1_EP_Pad:
@@ -524,11 +535,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Tremolo EP
+    tone: Tremolo EP + JP8 Strings
     effect: SLICER
-    level: 0 10
-    other: JF8 Strings | 0 8
-    screen_slot: 10-1
+    level: 0 10 / 0 8
+    other: ''
+    screen_slot: 1-1
     reviewed: false
   13-2_Comp_Piano:
     title: 13-2 Comp Piano
@@ -537,9 +548,9 @@ patches:
     tags: []
     notes: ''
     tone: GrandPianoU
-    effect: FLANGER
+    effect: MFX FLANGER
     level: 0 10
-    other: MFX
+    other: ''
     screen_slot: 19-2
     reviewed: false
   13-3_Mandolsap:
@@ -548,10 +559,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: JD Piano
+    tone: JD Piano + JD Piano
     effect: DISTORTION
-    level: '0.10'
-    other: JD Piano -2.10
+    level: 0 10 / -2 10
+    other: ''
     screen_slot: 10-01
     reviewed: false
   13-4_Follow_you:
@@ -560,11 +571,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Dreaming
+    tone: Dreaming + JD Piano
     effect: CHORUS
-    level: 0 10
-    other: JD Piano 0 B
-    screen_slot: 1D-4
+    level: 0 10 / 0 8
+    other: ''
+    screen_slot: 1D-1
     reviewed: false
   14-1_DirtSavLd:
     title: 14-1 DirtSavLd
@@ -572,11 +583,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Saw Lead 1
+    tone: Saw Lead 1 + Super Saws
     effect: BIT CRASH
-    level: '0.10'
-    other: Super Saws -2.12
-    screen_slot: U4-1
+    level: 0 10 / -2 12
+    other: ''
+    screen_slot: 1-1
     reviewed: false
   14-2_XtremoQLoad:
     title: 14-2 XtremoQLoad
@@ -584,10 +595,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Punker
+    tone: Punker + Super Saws
     effect: DISTORTION
-    level: 0 10
-    other: Super Saws 0 10
+    level: 0 10 / 0 10
+    other: ''
     screen_slot: 14-2
     reviewed: false
   14-3_Native_Lead:
@@ -599,7 +610,7 @@ patches:
     tone: Pure Lead
     effect: FLANGER
     level: 0 10
-    other: 'MFX:'
+    other: ''
     screen_slot: 1-01
     reviewed: false
   14-4_Foruq_n_Lead:
@@ -608,11 +619,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Saw Lead 1
-    effect: 8IT CRASH
-    level: 0 10
-    other: Saw Lead 1, -2 10
-    screen_slot: 1-1
+    tone: Saw Lead 1 + Saw Lead 1
+    effect: 6lT CRASH
+    level: 0 10 / -2 10
+    other: ''
+    screen_slot: 1-4
     reviewed: false
   15-1_Vox8Strings:
     title: 15-1 Vox8Strings
@@ -620,11 +631,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Uox Pad 1
+    tone: Uox Pad 1 + JP8 Strings!
     effect: SLICER
-    level: -1 10
-    other: JP8 Strings!
-    screen_slot: 1D-1
+    level: -1 10 / -1 10
+    other: ''
+    screen_slot: 1-1
     reviewed: false
   15-2_ThickVoxStr:
     title: 15-2 ThickVoxStr
@@ -632,11 +643,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Classical
+    tone: Classical + JP8 Strings!
     effect: FLANGER
-    level: -1 10
-    other: JP8 Strings! -1 12
-    screen_slot: 19-24
+    level: -1 10 / -1 12
+    other: ''
+    screen_slot: 19-1
     reviewed: false
   15-3_ProgJMP04:
     title: 15-3 ProgJMP04
@@ -644,11 +655,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: JP8 Brass
+    tone: JP8 Brass + JP8 Strings
     effect: CHORUS
-    level: -1 10
-    other: JP8 Strings
-    screen_slot: 05-01
+    level: -1 10 / -1 10
+    other: ''
+    screen_slot: 1D-01
     reviewed: false
   15-4_Euro_String:
     title: 15-4 Euro String
@@ -656,11 +667,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: JPB Strings!
+    tone: JPE Strings! + UP-330 Chr
     effect: SLICER
-    level: 0 10
-    other: UP-330 Chr 0 0
-    screen_slot: 10-1
+    level: 0 10 / 0 6
+    other: ''
+    screen_slot: 1-1
     reviewed: false
   16-1_BlindDub08:
     title: 16-1 BlindDub08
@@ -668,10 +679,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Eal Analog
+    tone: Fal Analog + Syn Bass
     effect: HEXA-CHORUS
-    level: '-2.12'
-    other: Syn Bass
+    level: -2 12 / -2 12
+    other: ''
     screen_slot: 1D-1
     reviewed: false
   16-2_LetNBasSpace:
@@ -680,31 +691,31 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Rose B5
-    effect: HEXN-CHORUS
-    level: -2 10
-    other: Union B5 -1 10
+    tone: Roso Bs + Unison Bs
+    effect: HEXAHEXN-CHORUS
+    level: -2 10 / -1 10
+    other: ''
     screen_slot: 10-2
     reviewed: false
   16-3_Dist_Drum:
     title: 16-3 Dist Drum
     captured: '2026-10-09T17:50:41'
-    preview: chord
+    preview: drums
     tags: []
     notes: ''
     tone: TR-909
     effect: HEX FLANGER
     level: '12'
     other: ''
-    screen_slot: 10-9
+    screen_slot: 10-1
     reviewed: false
   16-4_Comp_Drum:
     title: 16-4 Comp Drum
     captured: '2026-10-09T17:50:54'
-    preview: chord
+    preview: drums
     tags: []
     notes: ''
-    tone: Rock K11
+    tone: Rock K1l
     effect: FLANGER
     level: '12'
     other: ''
@@ -716,11 +727,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: Jazz Organ II
+    tone: Jazz Organ II + Sky BLt
     effect: TWIN ROTARY
-    level: 0 l2
-    other: Sky Bill
-    screen_slot: '0'
+    level: 0 12 / 1 12
+    other: ''
+    screen_slot: 1-1
     reviewed: false
   17-2_NO_MODE:
     title: 17-2 NO MODE
@@ -728,10 +739,10 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: ''
+    tone: Soft Pad 1 + GrandPiano(J)
     effect: PITCH SHIFTER
-    level: ''
-    other: Soft Pad 1 -1 10, GrandPiano(J) -1 10
+    level: -1 10 / -1 10
+    other: TEST TONE
     screen_slot: 11-24
     reviewed: false
   17-3_METRO:
@@ -744,7 +755,7 @@ patches:
     effect: BIT CRASH
     level: 0 10
     other: ''
-    screen_slot: '1'
+    screen_slot: 1-1
     reviewed: false
   17-4_NO_MORE:
     title: 17-4 NO MORE
@@ -756,7 +767,7 @@ patches:
     effect: MODULATION 0
     level: -1 10
     other: ''
-    screen_slot: 11-4
+    screen_slot: 1-1
     reviewed: false
   18-1_Band5__9:
     title: 18-1 Band5 /9
@@ -776,11 +787,11 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: GrandPiano|
+    tone: GrandPiano
     effect: PITCH SHIFTER
     level: 0 10
     other: ''
-    screen_slot: 10=2
+    screen_slot: 10-2
     reviewed: false
   1-3_FatterPno_DF:
     title: 1-3 FatterPno.DF
@@ -788,41 +799,45 @@ patches:
     preview: chord
     tags: []
     notes: ''
-    tone: GrandPiano U
+    tone: GrandPiano U + Grand Piano
     effect: CHORUS
-    level: '0.12'
-    other: GrandPiano 0.11
+    level: 0 12 / 0 11
+    other: ''
     reviewed: false
+    screen_slot: 1-4
   1-4_BottomPno_0F:
     title: 1-4 BottomPno.0F
     captured: '2026-10-09T17:26:49'
     preview: chord
     tags: []
     notes: ''
-    tone: GrandPlanoU
+    tone: GrandPlanoU + Grand Piano
     effect: CHORUS
-    level: -1 12
-    other: Grand Piano -1 12
+    level: -1 12 / -1 12
+    other: ''
     reviewed: false
+    screen_slot: 1-1
   2-3_Organ_EP:
     title: 2-3 Organ+EP
     captured: '2026-10-09T17:27:35'
     preview: chord
     tags: []
     notes: ''
-    tone: Pure EP
+    tone: Pure EP + Rock Organ
     effect: HEXA-CHORUS
-    level: 0 12
-    other: Rock Organ W 0 10
+    level: 0 12 / 0 10
+    other: OF
     reviewed: false
+    screen_slot: 2-1
   2-4_LocaL0ra0F:
     title: 2-4 LocaL0ra0F
     captured: '2026-10-09T17:27:47'
     preview: chord
     tags: []
     notes: ''
-    tone: Pipe Organ3
+    tone: Pipe Organ3 + Pipe Organ3
     effect: CHORUS
-    level: '0.12'
-    other: Pipe Organ3 | 12
+    level: 0 12 / 0 12
+    other: ''
     reviewed: false
+    screen_slot: 2-1

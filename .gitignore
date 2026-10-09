@@ -8,3 +8,4 @@ library/photos/
 library/audio/
 .venv/
 library/catalog.yaml.bak
+library/review.html

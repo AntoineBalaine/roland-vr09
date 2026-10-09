@@ -1,0 +1,109 @@
+# One dump name per line, in performance order. Blank lines and # comments are ignored.
+# Reorder or delete lines to build a setlist; the name after # is only a reminder.
+
+
+# bank 1
+1-1_MassiveOrgDF    # 1-1 MassiveOrgDF  |  Rock Organ
+1-2_JazzRoll_OF    # 1-2 JazzRoll OF  |  Jazz Organ +
+1-3_FatterPno_DF    # 1-3 FatterPno.DF  |  GrandPiano U + Grand Piano
+1-4_BottomPno_0F    # 1-4 BottomPno.0F  |  GrandPlanoU + Grand Piano
+
+# bank 2
+2-1_Piano_Org    # 2-1 Piano+Org  |  Rock Organ III + GrandPiano()
+2-2_Ueuo_Piano    # 2-2 Ueuo Piano  |  Rock Organ 1 + Mono Piano
+2-3_Organ_EP    # 2-3 Organ+EP  |  Pure EP + Rock Organ
+2-4_LocaL0ra0F    # 2-4 LocaL0ra0F  |  Pipe Organ3 + Pipe Organ3
+
+# bank 3
+3-1_Chowii_EP    # 3-1 Chowii EP  |  +Phase EP + '60s E.Piano
+3-2_SHOOP_EP    # 3-2 SHOOP_EP  |  Tremolo EP2 + Tremolo 2
+3-3_H8dr10_EP    # 3-3 H8dr10_EP  |  Pure EP + FM EP 1
+3-4_CITY_Eng__OF    # 3-4 CITY Eng. OF  |  Br11Clav 08 + Halo Clav
+
+# bank 4
+4-1_NowJazz01_DF    # 4-1 NowJazz01.DF  |  80s Brss 2 + Finger Bs
+4-2_Nylon-Grande    # 4-2 Nylon-Grande  |  Nylon-str.GL -1 12 + Full Strings -1 5
+4-3_SUBTROIR_DF    # 4-3 SUBTROIR DF  |  Steel-tr.Gt -1 11 + Picked Bs -1 10
+4-4_Riepingl_d_DF    # 4-4 Riepingl d DF  |  LP Dist + Punker
+
+# bank 5
+5-1_Wamm_Jamm_DF    # 5-1 Wamm Jamm DF  |  BluesHarp + Finger Bs
+5-2_Solo_Sax    # 5-2 Solo Sax  |  Alto Sax
+5-3_Video_DeSROF    # 5-3 Video DeSROF  |  Ultraphone + AL AcousticBs
+5-4_Accordion_DF    # 5-4 Accordion DF  |  Fr Musset + Accordion
+
+# bank 6
+6-1_PowerNormOF    # 6-1 PowerNormOF  |  SlackTp Sect 1 + FS Brass
+6-2_Snowflor_me_DF    # 6-2 Snowflor me DF  |  Solo Tb + FS Brass
+6-3_Warnings_UF    # 6-3 Warnings UF  |  StackTp Sect 1 + Soft Tb
+6-4_Bax80eLi0nDF    # 6-4 Bax80eLi0nDF  |  Bleu Sax + Soprano Sax
+
+# bank 7
+7-1_UsoCUYUFF_OF    # 7-1 UsoCUYUFF OF  |  UP8511Pd + Strings
+7-2_Cello_Ens_DF    # 7-2 Cello+Ens.DF  |  Cello + Dyn Strings
+7-3_Expres9str_OF    # 7-3 Expres9str.OF  |  Hood Strings -1 10 + SL UPOSTIPD 0 8
+7-4_Orvice_Padde    # 7-4 Orvice Padde  |  Sun Pad 2 + FX 1
+
+# bank 8
+8-1_Lowsplit    # 8-1 Lowsplit  |  Fat Analog + Sun Pad 1
+8-2_Not_InLove    # 8-2 Not InLove  |  Classical + Choir
+8-3_JazzScate_OF    # 8-3 JazzScate OF  |  Jazz Doo + Jazz Scal
+8-4_HauntedOrgOF    # 8-4 HauntedOrgOF  |  Gospel Or.3 + Pipe Organ3
+
+# bank 9
+9-1_LongDivision    # 9-1 LongDivision  |  Sun Strings1 + JP8 Brass
+9-2_808PwrLUVP    # 9-2 808PwrLUVP  |  GrandPianoU + 08 Strings
+9-3_Day_Area_D3    # 9-3 Day Area D3  |  Rock Organ
+9-4_Orl_Bowld    # 9-4 Orl Bowld  |  Saw Lead 1 + Super Saws
+
+# bank 10
+10-1_TheWridgetUra    # 10-1 TheWridgetUra  |  JP8 Brass + JP8 Strings
+10-2_Sweet_Dream    # 10-2 Sweet Dream  |  JP8 Strings1 + JP8 Brass
+10-3_BrassOrgan    # 10-3 BrassOrgan  |  FS Brass + Rock Organ
+10-4_DoomDebro    # 10-4 DoomDebro  |  JP8 Brass + Super Saws
+
+# bank 11
+11-1_BlueJ_03    # 11-1 BlueJ 03  |  Rock Organ
+11-2_Proauer_03    # 11-2 Proauer 03  |  Rock Organ
+11-3_Jazzer_B3    # 11-3 Jazzer B3  |  Jazz Organ
+11-4_Voxu    # 11-4 Voxu  |  Transistor
+
+# bank 12
+12-1_PnooBeolit    # 12-1 PnooBeolit  |  GrandPianoU + AL Reeds LicBs
+12-2_EPb5Spill    # 12-2 EPb5Spill  |  Vintage EP + N.Acoustic UcBs
+12-3_DIMPnooBrill    # 12-3 DIMPnooBrill  |  GrandPiano1 + SweepPad
+12-4_TrptPadSplit    # 12-4 TrptPadSplit  |  N. Trumpet + Soft Pad 1
+
+# bank 13
+13-1_EP_Pad    # 13-1 EP Pad  |  Tremolo EP + JP8 Strings
+13-2_Comp_Piano    # 13-2 Comp Piano  |  GrandPianoU
+13-3_Mandolsap    # 13-3 Mandolsap  |  JD Piano + JD Piano
+13-4_Follow_you    # 13-4 Follow you  |  Dreaming + JD Piano
+
+# bank 14
+14-1_DirtSavLd    # 14-1 DirtSavLd  |  Saw Lead 1 + Super Saws
+14-2_XtremoQLoad    # 14-2 XtremoQLoad  |  Punker + Super Saws
+14-3_Native_Lead    # 14-3 Native Lead  |  Pure Lead
+14-4_Foruq_n_Lead    # 14-4 Foruq n Lead  |  Saw Lead 1 + Saw Lead 1
+
+# bank 15
+15-1_Vox8Strings    # 15-1 Vox8Strings  |  Uox Pad 1 + JP8 Strings!
+15-2_ThickVoxStr    # 15-2 ThickVoxStr  |  Classical + JP8 Strings!
+15-3_ProgJMP04    # 15-3 ProgJMP04  |  JP8 Brass + JP8 Strings
+15-4_Euro_String    # 15-4 Euro String  |  JPE Strings! + UP-330 Chr
+
+# bank 16
+16-1_BlindDub08    # 16-1 BlindDub08  |  Fal Analog + Syn Bass
+16-2_LetNBasSpace    # 16-2 LetNBasSpace  |  Roso Bs + Unison Bs
+16-3_Dist_Drum    # 16-3 Dist Drum  |  TR-909
+16-4_Comp_Drum    # 16-4 Comp Drum  |  Rock K1l
+
+# bank 17
+17-1_ABACAB    # 17-1 ABACAB  |  Jazz Organ II + Sky BLt
+17-2_NO_MODE    # 17-2 NO MODE  |  Soft Pad 1 + GrandPiano(J)
+17-3_METRO    # 17-3 METRO  |  Saw Lead 1
+17-4_NO_MORE    # 17-4 NO MORE  |  Soft Pad 1
+
+# bank 18
+18-1_Band5__9    # 18-1 Band5 /9  |  Saw Lead 3
+18-2_Recent_m8    # 18-2 Recent_m8  |  GrandPiano
