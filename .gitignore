@@ -4,11 +4,11 @@ dumps/now*.json
 dumps/after*.json
 dumps/back*.json
 dumps/verify*.json
-library/photos/
-library/audio/
 .venv/
 library/catalog.yaml.bak
-library/review.html
 web/node_modules/
 web/.astro/
 web/dist/
+library/audio-wav/
+library/photos/test.jpg
+library/photos/_tmp.jpg
