@@ -57,7 +57,10 @@ def main():
     next_key, prev_key = resolve_key(next_name), resolve_key(prev_name)
     index = 0
 
-    print(f"{len(setlist)} scenes loaded from {setlist_path}")
+    # Load the setlist once: the addresses to write depend only on the scenes in it, so a key press
+    # only has to send them.
+    fd, dumps, varying = vr09.prepare(sorted(set(setlist)))
+    print(f"{len(setlist)} scenes loaded from {setlist_path}, {len(varying)} addresses differ between them")
     print(f"[{index + 1}/{len(setlist)}] {setlist[index]} (not sent yet, press {next_name} or {prev_name})")
 
     def on_press(key):
@@ -70,7 +73,7 @@ def main():
             return
         name = setlist[index]
         print(f"[{index + 1}/{len(setlist)}] {name}")
-        vr09.recall(name)
+        vr09.recall_prepared(fd, dumps, varying, name)
 
     with keyboard.Listener(on_press=on_press) as listener:
         listener.join()

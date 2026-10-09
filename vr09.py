@@ -5,7 +5,8 @@
   vr09.py dump NAME     read every block in BLOCKS into dumps/NAME.json
   vr09.py diff A B      list the addresses whose values differ between two dumps
   vr09.py apply A B     write the values of dump A that differ from dump B to the keyboard (DT1)
-  vr09.py recall NAME   write registration NAME (dumps/NAME.json) without reading the current state
+  vr09.py recall NAME [OTHER ...]   write dump NAME without reading the unit; OTHER lists the dumps to switch
+                        between (default: every dump in the folder, slower the more there are)
   vr09.py watch         dump repeatedly and print every change as it happens
 """
 import json
@@ -202,20 +203,45 @@ def varying_keys(dumps):
     return sorted(k for k in set().union(*dumps) if len({d.get(k) for d in dumps}) > 1)
 
 
-def recall(name):
-    """Write the values of dump name at every address that differs between the saved registrations.
+def is_dump(content):
+    """True for a dict whose keys look like block:address, which excludes scan files and models.json."""
+    return isinstance(content, dict) and bool(content) and all(":" in k for k in content)
 
+
+def load_dumps(names=None):
+    """Load dumps/NAME.json for the given names, or every real dump in the folder when names is None."""
+    if names is None:
+        names = [f[:-5] for f in sorted(os.listdir("dumps")) if f.endswith(".json")]
+        loaded = {n: json.load(open(f"dumps/{n}.json")) for n in names}
+        return {n: d for n, d in loaded.items() if is_dump(d)}
+    loaded = {n: json.load(open(f"dumps/{n}.json")) for n in names}
+    for n, d in loaded.items():
+        if not is_dump(d):
+            sys.exit(f"dumps/{n}.json is not a dump")
+    return loaded
+
+
+def prepare(names=None):
+    """Open the unit and work out which addresses a recall among the given dumps has to write."""
+    dumps = load_dumps(names)
+    return open_device(find_port()), dumps, varying_keys(list(dumps.values()))
+
+
+def recall_prepared(fd, dumps, varying, name):
+    write_differences(fd, dumps[name], {}, only=varying)
+
+
+def recall(name, among=None):
+    """Write the values of dump name at every address that differs between the dumps in among.
+
+    among is a list of dump names, by default every dump in the folder. The scenes you switch
+    between should be listed, because every extra dump adds addresses to write and slows the recall.
     The current state is not read: writing the target's value at all of those addresses gives the
-    same result whatever registration is loaded.
+    same result whatever scene is loaded, as long as it is one of the dumps in among.
     """
-    saved = {
-        os.path.basename(f)[:-5]: json.load(open(f"dumps/{f}"))
-        for f in os.listdir("dumps")
-        if f.endswith(".json")
-    }
-    fd = open_device(find_port())
+    fd, dumps, varying = prepare(sorted(set(among or []) | {name}) if among else None)
     start = time.time()
-    write_differences(fd, saved[name], {}, only=varying_keys(list(saved.values())))
+    recall_prepared(fd, dumps, varying, name)
     print(f"{time.time() - start:.2f}s")
 
 
@@ -238,8 +264,8 @@ if __name__ == "__main__":
         print(find_port())
     elif cmd == "dump" and len(sys.argv) == 3:
         dump(sys.argv[2])
-    elif cmd == "recall" and len(sys.argv) == 3:
-        recall(sys.argv[2])
+    elif cmd == "recall" and len(sys.argv) >= 3:
+        recall(sys.argv[2], sys.argv[3:])
     elif cmd == "apply" and len(sys.argv) == 4:
         apply(sys.argv[2], sys.argv[3])
     elif cmd == "watch":
