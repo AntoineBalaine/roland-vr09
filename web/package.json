@@ -1,0 +1,24 @@
+{
+  "name": "vr09-library",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Web page for the VR-09 patch library: review, edit and build setlists",
+  "scripts": {
+    "start": "astro dev --open",
+    "dev": "astro dev",
+    "check": "astro check"
+  },
+  "engines": {
+    "node": ">=18.20.8"
+  },
+  "dependencies": {
+    "astro": "^7.3.8",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/node": "^26.6.5",
+    "typescript": "^6.0.3"
+  }
+}

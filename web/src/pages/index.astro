@@ -1,0 +1,41 @@
+---
+import "../styles/style.css";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Patch library</title>
+  </head>
+  <body>
+    <div id="lock" hidden>A capture is running: changes are disabled until it stops (q at its prompt).</div>
+    <header>
+      <h1>Patch library</h1>
+      <nav>
+        <button class="tab on" id="tab-library">Library</button>
+        <button class="tab" id="tab-setlist">Setlist <span id="setlist-count"></span></button>
+      </nav>
+      <input id="q" type="search" placeholder="Search title, tone, effect, key" autofocus />
+      <label id="todo-label"><input id="todo" type="checkbox" /> not reviewed only</label>
+      <span id="count"></span>
+    </header>
+    <main id="library" class="grid"></main>
+    <section id="setlist" hidden>
+      <div class="bar">
+        <button id="reload">Reload from the file</button>
+        <button id="clear">Clear</button>
+      </div>
+      <p class="hint">
+        Every change here is saved at once to the setlist file; then run <code>pedal_scenes.py</code> with it. Add
+        patches from the Library tab.
+      </p>
+      <ol id="items"></ol>
+    </section>
+    <div id="toast"></div>
+    <script>
+      import "../scripts/app.ts";
+    </script>
+  </body>
+</html>

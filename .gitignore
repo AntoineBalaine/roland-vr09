@@ -9,3 +9,6 @@ library/audio/
 .venv/
 library/catalog.yaml.bak
 library/review.html
+web/node_modules/
+web/.astro/
+web/dist/

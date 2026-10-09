@@ -12,12 +12,13 @@ preview that the tool plays itself over MIDI, one patch at a time.
                                               (titles are never touched; reviewed entries are skipped
                                               unless --all)
   collect_library.py serve [--port N] [--no-browser] [--setlist FILE]
-                                              the library as a web page at http://127.0.0.1:8765/ : photo,
-                                              fields and audio of every patch. Double-click a card to edit
+                                              the library as a web page at http://127.0.0.1:8765/ (an Astro
+                                              app in web/, run once with: cd web && npm install). Photo,
+                                              fields and audio of every patch: double-click a card to edit
                                               it, click its reviewed flag to toggle it, and build the setlist
                                               (default setlist.txt) in the Setlist tab. Every change is saved
                                               at once; a new title renames the patch's files. Writes are
-                                              refused while a capture is running. (review is the same)
+                                              refused while a capture is running. Same as: cd web && npm start
   collect_library.py setlist [FILE]           write a setlist file with every patch in order (default
                                               setlist.txt) for pedal_scenes.py
   collect_library.py sync                     after editing titles in library/catalog.yaml, rename the keys and
@@ -80,7 +81,6 @@ default snapshot URL is http://<phone-ip>:8080/shot.jpg). Set VR09_CAM or pass -
 """
 import base64
 import datetime
-import http.server
 import json
 import os
 import re
@@ -533,274 +533,6 @@ def reread(everything, model=VISION_MODEL):
     print(f"{done} patches read again")
 
 
-PAGE = r"""<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Patch library</title>
-<style>
-  :root { --bg: #f6f6f4; --card: #fff; --text: #1d1d1b; --muted: #6b6b66; --line: #d8d8d2; --accent: #1f5fbf; --flag: #b45309; --ok: #1a7f4b; --bad: #b3261e; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #151514; --card: #201f1e; --text: #ecebe7; --muted: #9c9a93; --line: #34322f; --accent: #7aa7f0; --flag: #f0a35a; --ok: #5fcf95; --bad: #f2877f; } }
-  * { box-sizing: border-box; }
-  [hidden] { display: none !important; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.4 system-ui, sans-serif; }
-  header { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid var(--line); padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
-  h1 { font-size: 18px; margin: 0 4px 0 0; }
-  nav { display: flex; gap: 4px; }
-  button { font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 5px 11px; cursor: pointer; }
-  button:hover:not(:disabled) { border-color: var(--accent); }
-  button:disabled { opacity: .4; cursor: default; }
-  button.tab.on, button.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
-  input[type=search], .f input, .f textarea { padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; width: 100%; }
-  input[type=search] { flex: 1 1 200px; max-width: 340px; background: var(--card); }
-  label { color: var(--muted); display: flex; gap: 6px; align-items: center; }
-  #count { color: var(--muted); margin-left: auto; }
-  #lock { background: var(--flag); color: var(--bg); padding: 8px 16px; font-weight: 500; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; padding: 16px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
-  .card[hidden] { display: none; }
-  .card.editing { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-  .card img { width: 100%; aspect-ratio: 2 / 1; object-fit: cover; background: #000; display: block; }
-  .body { padding: 10px 12px 12px; display: grid; gap: 4px; }
-  .title { font-size: 17px; font-weight: 600; }
-  .key { font: 12px ui-monospace, monospace; color: var(--muted); }
-  .row { color: var(--muted); } .row b { color: var(--text); font-weight: 500; }
-  .badge { font-size: 12px; border-radius: 10px; padding: 1px 8px; width: fit-content; border: 1px solid; background: transparent; }
-  .badge.todo { color: var(--flag); } .badge.done { color: var(--ok); }
-  .actions { display: flex; gap: 8px; align-items: center; margin-top: 4px; flex-wrap: wrap; }
-  .in { color: var(--accent); font-size: 13px; }
-  .hintline { color: var(--muted); font-size: 12px; }
-  .f { display: grid; gap: 2px; font-size: 12px; } .f textarea { min-height: 54px; resize: vertical; }
-  .check { flex-direction: row; }
-  audio { width: 100%; margin-top: 6px; }
-  .none { color: var(--muted); font-size: 13px; margin-top: 6px; }
-  #setlist { padding: 16px; max-width: 980px; }
-  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .hint { color: var(--muted); margin: 10px 0 14px; }
-  ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-  li.item { background: var(--card); border: 1px solid var(--line); border-radius: 8px; display: grid; grid-template-columns: 34px 120px 1fr auto; gap: 12px; align-items: center; padding: 8px 12px 8px 8px; }
-  li.item.missing { border-color: var(--bad); }
-  .num { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
-  li.item img { width: 120px; aspect-ratio: 2 / 1; object-fit: cover; border-radius: 4px; background: #000; display: block; }
-  .info { min-width: 0; } .info .title { font-size: 16px; }
-  .info audio { max-width: 340px; height: 32px; margin-top: 4px; }
-  .controls { display: flex; gap: 4px; }
-  .empty { color: var(--muted); padding: 24px 0; }
-  #toast { position: fixed; right: 16px; bottom: 16px; background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 70vw; }
-  #toast.show { opacity: .95; } #toast.bad { background: var(--bad); color: #fff; }
-  @media (max-width: 640px) { li.item { grid-template-columns: 28px 1fr auto; } li.item img { display: none; } }
-</style>
-</head>
-<body>
-<div id="lock" hidden>A capture is running: changes are disabled until it stops (q at its prompt).</div>
-<header>
-  <h1>Patch library</h1>
-  <nav>
-    <button class="tab on" id="tab-library">Library</button>
-    <button class="tab" id="tab-setlist">Setlist <span id="setlist-count"></span></button>
-  </nav>
-  <input id="q" type="search" placeholder="Search title, tone, effect, key" autofocus>
-  <label id="todo-label"><input id="todo" type="checkbox"> not reviewed only</label>
-  <span id="count"></span>
-</header>
-<main id="library" class="grid"></main>
-<section id="setlist" hidden>
-  <div class="bar">
-    <button id="reload">Reload from the file</button>
-    <button id="clear">Clear</button>
-  </div>
-  <p class="hint">Every change here is saved at once to the setlist file; then run <code>pedal_scenes.py</code> with it.
-  Add patches from the Library tab.</p>
-  <ol id="items"></ol>
-</section>
-<div id="toast"></div>
-<script>
-let P = {}, order = [], setlist = [], editing = null, locked = false;
-const $ = id => document.getElementById(id);
-const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
-const library = $("library"), items = $("items"), q = $("q"), todo = $("todo");
-
-let toastTimer;
-function toast(text, bad) {
-  const t = $("toast"); t.textContent = text; t.className = "show" + (bad ? " bad" : "");
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = "", bad ? 5000 : 1800);
-}
-async function post(path, body) {
-  let r, data = {};
-  try {
-    r = await fetch(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
-    data = await r.json();
-  } catch (e) { toast("could not reach the server: " + e, true); throw e; }
-  if (!r.ok) { toast(data.error || ("error " + r.status), true); throw new Error(data.error || r.status); }
-  return data;
-}
-function applyData(d) {
-  P = d.patches; order = d.order; setlist = d.saved; locked = d.capture_running; $("lock").hidden = !locked;
-  if (editing && !P[editing]) editing = null;
-  renderLibrary(); renderSetlist();
-}
-async function load() { applyData(await (await fetch("/api/data")).json()); }
-
-function photoHtml(p) { return p.photo ? `<img src="${esc(p.photo)}" alt="" loading="lazy">` : ""; }
-function audioHtml(p) { return p.audio ? `<audio controls preload="none" src="${esc(p.audio)}"></audio>` : `<div class="none">no audio preview</div>`; }
-
-function cardHtml(key) {
-  const p = P[key], at = setlist.indexOf(key) + 1;
-  if (key === editing) return editHtml(key);
-  const rows = ["tone", "effect", "level", "other"].filter(f => p[f]).map(f => `<div class="row">${f}: <b>${esc(p[f])}</b></div>`).join("");
-  const extra = (p.tags.length ? `<div class="row">tags: <b>${esc(p.tags.join(", "))}</b></div>` : "") + (p.notes ? `<div class="row">notes: <b>${esc(p.notes)}</b></div>` : "");
-  const text = [p.title, p.tone, p.effect, p.level, p.other, p.notes, p.tags.join(" "), key].join(" ").toLowerCase();
-  return `<article class="card" data-key="${esc(key)}" data-reviewed="${p.reviewed ? "yes" : "no"}" data-text="${esc(text)}">
-    ${photoHtml(p)}
-    <div class="body"><div class="title">${esc(p.title || "(no title)")}</div><div class="key">${esc(key)}</div>${rows}${extra}
-    <button class="badge ${p.reviewed ? "done" : "todo"}" data-act="reviewed" title="Click to mark as ${p.reviewed ? "not reviewed" : "reviewed"}">${p.reviewed ? "reviewed" : "not reviewed"}</button>
-    <div class="actions"><button data-act="toggle">${at ? "Remove from setlist" : "Add to setlist"}</button>${at ? `<span class="in">in setlist, no. ${at}</span>` : ""}</div>
-    <div class="hintline">double-click the card to edit</div>
-    ${audioHtml(p)}</div></article>`;
-}
-function editHtml(key) {
-  const p = P[key];
-  const field = (name, label, value) => `<label class="f">${label}<input name="${name}" value="${esc(value === undefined ? p[name] : value)}" autocomplete="off"></label>`;
-  return `<article class="card editing" data-key="${esc(key)}" data-reviewed="${p.reviewed ? "yes" : "no"}" data-text="">
-    ${photoHtml(p)}
-    <form class="body" data-key="${esc(key)}">
-      <div class="key">${esc(key)}</div>
-      ${field("title", "title (slot and name; changing it renames the files)")}
-      ${field("tone", "tone")}${field("effect", "effect")}${field("level", "level")}${field("other", "other")}
-      ${field("tags", "tags, separated by commas", p.tags.join(", "))}
-      <label class="f">notes<textarea name="notes">${esc(p.notes)}</textarea></label>
-      <label class="check"><input type="checkbox" name="reviewed" ${p.reviewed ? "checked" : ""}> reviewed</label>
-      <div class="actions"><button type="submit" class="primary">Save</button><button type="button" data-act="cancel">Cancel</button>
-      <span class="hintline">Esc cancels</span></div>
-    </form></article>`;
-}
-function renderLibrary() {
-  library.innerHTML = order.map(cardHtml).join("");
-  applyFilter();
-}
-function renderSetlist() {
-  $("setlist-count").textContent = "(" + setlist.length + ")";
-  if (!setlist.length) { items.innerHTML = `<li class="empty">The setlist is empty. Add patches from the Library tab.</li>`; return; }
-  items.innerHTML = setlist.map((key, i) => {
-    const p = P[key];
-    const controls = `<div class="controls"><button data-act="up" ${i === 0 ? "disabled" : ""} title="Move up">&#9650;</button>
-      <button data-act="down" ${i === setlist.length - 1 ? "disabled" : ""} title="Move down">&#9660;</button>
-      <button data-act="remove" title="Remove">&#10005;</button></div>`;
-    if (!p) return `<li class="item missing" data-key="${esc(key)}"><span class="num">${i + 1}</span><span></span>
-      <div class="info"><div class="title">${esc(key)}</div><div class="row">not in the catalog (renamed or removed?)</div></div>${controls}</li>`;
-    return `<li class="item" data-key="${esc(key)}"><span class="num">${i + 1}</span>
-      ${p.photo ? `<img src="${esc(p.photo)}" alt="" loading="lazy">` : "<span></span>"}
-      <div class="info"><div class="title">${esc(p.title)}</div><div class="row">${esc([p.tone, p.effect].filter(Boolean).join("  |  "))}</div>
-      ${p.audio ? `<audio controls preload="none" src="${esc(p.audio)}"></audio>` : ""}</div>${controls}</li>`;
-  }).join("");
-}
-function applyFilter() {
-  const words = q.value.toLowerCase().split(/\s+/).filter(Boolean);
-  let shown = 0;
-  for (const c of library.children) {
-    const ok = c.classList.contains("editing") || (words.every(w => c.dataset.text.includes(w)) && (!todo.checked || c.dataset.reviewed === "no"));
-    c.hidden = !ok; shown += ok;
-  }
-  $("count").textContent = shown + " of " + order.length + " patches";
-}
-
-async function saveSetlist(list) {
-  const data = await post("/api/setlist", {list: list});
-  applyData(data); toast("setlist saved, " + data.saved.length + " patches");
-}
-async function saveFields(key, fields, message) {
-  const data = await post("/api/patch", {key: key, fields: fields});
-  editing = null; applyData(data); toast(data.message || message || "saved");
-}
-
-library.addEventListener("click", async e => {
-  const button = e.target.closest("button[data-act]");
-  if (!button) return;
-  const card = button.closest(".card"), key = card.dataset.key, act = button.dataset.act;
-  if (act === "cancel") { editing = null; renderLibrary(); }
-  else if (act === "reviewed") saveFields(key, {reviewed: !P[key].reviewed}, P[key].reviewed ? "marked not reviewed" : "marked reviewed").catch(() => {});
-  else if (act === "toggle") {
-    const next = setlist.includes(key) ? setlist.filter(k => k !== key) : setlist.concat([key]);
-    saveSetlist(next).catch(() => {});
-  }
-});
-library.addEventListener("dblclick", e => {
-  const card = e.target.closest(".card");
-  if (!card || e.target.closest("button, audio, input, textarea, label")) return;
-  if (locked) { toast("a capture is running: changes are disabled", true); return; }
-  editing = card.dataset.key; renderLibrary();
-  const field = library.querySelector(".card.editing input[name=title]");
-  if (field) { field.focus(); field.select(); }
-});
-library.addEventListener("submit", e => {
-  e.preventDefault();
-  const form = e.target, key = form.dataset.key, p = P[key], fields = {};
-  const value = name => form.elements[name].value.trim();
-  for (const name of ["title", "tone", "effect", "level", "other", "notes"]) if (value(name) !== (p[name] || "")) fields[name] = value(name);
-  const tags = value("tags").split(",").map(t => t.trim()).filter(Boolean);
-  if (tags.join("|") !== p.tags.join("|")) fields.tags = tags;
-  if (form.elements.reviewed.checked !== p.reviewed) fields.reviewed = form.elements.reviewed.checked;
-  if (!Object.keys(fields).length) { editing = null; renderLibrary(); return; }
-  saveFields(key, fields).catch(() => {});
-});
-document.addEventListener("keydown", e => { if (e.key === "Escape" && editing) { editing = null; renderLibrary(); } });
-
-items.addEventListener("click", e => {
-  const button = e.target.closest("button[data-act]");
-  if (!button) return;
-  const list = setlist.slice(), i = list.indexOf(button.closest(".item").dataset.key), act = button.dataset.act;
-  if (act === "remove") list.splice(i, 1);
-  else if (act === "up" && i > 0) [list[i - 1], list[i]] = [list[i], list[i - 1]];
-  else if (act === "down" && i < list.length - 1) [list[i + 1], list[i]] = [list[i], list[i + 1]];
-  saveSetlist(list).catch(() => {});
-});
-$("clear").addEventListener("click", () => saveSetlist([]).catch(() => {}));
-$("reload").addEventListener("click", () => load().then(() => toast("reloaded")));
-
-function show(tab) {
-  const onSetlist = tab === "setlist";
-  library.hidden = onSetlist; $("setlist").hidden = !onSetlist;
-  for (const id of ["q", "todo-label", "count"]) $(id).style.display = onSetlist ? "none" : "";
-  $("tab-library").classList.toggle("on", !onSetlist);
-  $("tab-setlist").classList.toggle("on", onSetlist);
-  history.replaceState(null, "", onSetlist ? "#setlist" : "#");
-}
-$("tab-library").addEventListener("click", () => show("library"));
-$("tab-setlist").addEventListener("click", () => show("setlist"));
-q.addEventListener("input", applyFilter); todo.addEventListener("change", applyFilter);
-
-load().then(() => show(location.hash === "#setlist" ? "setlist" : "library"));
-</script>
-</body>
-</html>
-"""
-
-
-def capture_running():
-    """True when a Python process is running collect_library.py capture.
-
-    The arguments of each process are examined, because matching text on the command line also matches
-    a shell or editor whose command merely mentions it.
-    """
-    for entry in os.listdir("/proc"):
-        if not entry.isdigit() or int(entry) == os.getpid():
-            continue
-        try:
-            with open(f"/proc/{entry}/cmdline", "rb") as f:
-                argv = [a.decode(errors="replace") for a in f.read().split(b"\0") if a]
-        except OSError:
-            continue
-        if (
-            len(argv) >= 3
-            and os.path.basename(argv[0]).startswith("python")
-            and any(os.path.basename(a) == "collect_library.py" for a in argv[1:])
-            and "capture" in argv
-        ):
-            return True
-    return False
-
-
 def read_setlist(path):
     """The dump names in a setlist file: one per line, whatever follows a # is a comment."""
     if not os.path.exists(path):
@@ -813,7 +545,7 @@ def write_setlist(path, keys, patches=None):
     """Write a setlist file: one key per line, with the title and tone after a # as a reminder."""
     patches = load_catalog() if patches is None else patches
     lines = ["# One dump name per line, in performance order. Blank lines and # comments are ignored.",
-             "# The text after # is only a reminder. This file is also written by collect_library.py serve.", ""]
+             "# The text after # is only a reminder. This file is also written by the web page (npm start in web/).", ""]
     for key in keys:
         e = patches.get(key)
         lines.append(f"{key}    # {e['title']}  |  {e.get('tone', '')}" if e else key)
@@ -830,169 +562,22 @@ def make_setlist(path):
     print(f"wrote {path} with {len(patches)} patches")
 
 
-# The review page and the server behind it ----------------------------------------------------------
-
-EDITABLE = ("title", "tone", "effect", "level", "other", "notes")
-
-
-def page_data(setlist_path):
-    from urllib.parse import quote
-
-    patches = load_catalog()
-    order = [k for k, _ in sorted(patches.items(), key=lambda kv: kv[1]["captured"])]
-    return {
-        "patches": {
-            key: {
-                **{name: str(patches[key].get(name) or "") for name in EDITABLE},
-                "tags": [str(t) for t in patches[key].get("tags") or []],
-                "reviewed": bool(patches[key].get("reviewed")),
-                "photo": f"photos/{quote(key)}.jpg" if os.path.exists(files(key)["photo"]) else "",
-                "audio": f"audio/{quote(key)}.wav" if os.path.exists(files(key)["audio"]) else "",
-            }
-            for key in order
-        },
-        "order": order,
-        "saved": read_setlist(setlist_path),
-        "capture_running": capture_running(),
-    }
-
-
-def edit_patch(key, fields, setlist_path):
-    """Apply edits to one catalog entry. A new title renames the entry, its files and its setlist line.
-
-    Returns (key after the edit, message).
-    """
-    patches = load_catalog()
-    if key not in patches:
-        raise LookupError(f"no patch named {key!r}")
-    entry = patches[key]
-    new_title = str(fields.get("title", "")).strip()
-    if "title" in fields and new_title and safe(new_title) != key:
-        new_key = safe(new_title)
-        if new_key in patches or os.path.exists(files(new_key)["dump"]):
-            raise ValueError(f"nothing saved: a patch called {new_key!r} already exists")
-    for name in EDITABLE:
-        if name in fields:
-            entry[name] = str(fields[name]).strip()
-    if "tags" in fields:
-        entry["tags"] = [str(t).strip() for t in fields["tags"] if str(t).strip()]
-    if "reviewed" in fields:
-        entry["reviewed"] = bool(fields["reviewed"])
-    save_catalog(patches)
-    title = entry.get("title", "")
-    if "title" in fields and title and safe(title) != key:
-        try:
-            rename(key, title)
-        except SystemExit as e:
-            raise ValueError(f"saved, but the files keep their name: {e}")
-        new_key = safe(title)
-        write_setlist(setlist_path, [new_key if k == key else k for k in read_setlist(setlist_path)])
-        return new_key, f"saved, renamed to {new_key}"
-    return key, "saved"
-
-
-def make_handler(setlist_path, port):
-    import threading
-    from urllib.parse import unquote, urlparse
-
-    lock = threading.Lock()  # one change to the files at a time
-    root = os.path.realpath(LIBRARY)
-    allowed = (os.path.realpath(PHOTOS) + os.sep, os.path.realpath(AUDIO) + os.sep)  # only these are served
-    types = {".jpg": "image/jpeg", ".wav": "audio/wav"}
-
-    class Handler(http.server.BaseHTTPRequestHandler):
-        def log_message(self, *args):
-            pass
-
-        def send(self, status, body, content_type="application/json", extra=()):
-            if isinstance(body, (dict, list)):
-                body = json.dumps(body, ensure_ascii=False)
-            payload = body.encode() if isinstance(body, str) else body
-            self.send_response(status)
-            self.send_header("Content-Type", content_type + ("; charset=utf-8" if content_type.startswith("text") or content_type == "application/json" else ""))
-            self.send_header("Content-Length", str(len(payload)))
-            self.send_header("Cache-Control", "no-store")
-            for name, value in extra:
-                self.send_header(name, value)
-            self.end_headers()
-            self.wfile.write(payload)
-
-        def host_ok(self):
-            return self.headers.get("Host", "") in (f"127.0.0.1:{port}", f"localhost:{port}")
-
-        def do_GET(self):
-            path = urlparse(self.path).path
-            if not self.host_ok():
-                return self.send(403, {"error": "unexpected host"})
-            if path == "/":
-                return self.send(200, PAGE, "text/html")
-            if path == "/api/data":
-                return self.send(200, page_data(setlist_path))
-            full = os.path.realpath(os.path.join(root, unquote(path).lstrip("/")))
-            if not full.startswith(allowed) or not os.path.isfile(full):  # judged on the resolved path
-                return self.send(404, {"error": "not found"})
-            with open(full, "rb") as f:
-                data = f.read()
-            content_type = types.get(os.path.splitext(full)[1], "application/octet-stream")
-            span = self.headers.get("Range", "")
-            if span.startswith("bytes="):  # browsers ask for ranges to play and seek audio
-                first, _, last = span[6:].partition("-")
-                start = int(first) if first else max(0, len(data) - int(last))
-                end = min(int(last), len(data) - 1) if first and last else len(data) - 1
-                return self.send(206, data[start : end + 1], content_type,
-                                 (("Content-Range", f"bytes {start}-{end}/{len(data)}"), ("Accept-Ranges", "bytes")))
-            self.send(200, data, content_type, (("Accept-Ranges", "bytes"),))
-
-        def do_POST(self):
-            path = urlparse(self.path).path
-            if not self.host_ok() or not self.headers.get("Content-Type", "").startswith("application/json"):
-                return self.send(403, {"error": "refused: not a request from the page"})
-            try:
-                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
-            except ValueError:
-                return self.send(400, {"error": "not JSON"})
-            if capture_running():
-                return self.send(409, {"error": "a capture is running: changes are disabled until it stops"})
-            try:
-                with lock:
-                    message = "saved"
-                    if path == "/api/patch":
-                        _, message = edit_patch(body["key"], body.get("fields") or {}, setlist_path)
-                    elif path == "/api/setlist":
-                        keys = [str(k) for k in body["list"]]
-                        write_setlist(setlist_path, keys)
-                    else:
-                        return self.send(404, {"error": "not found"})
-                    data = page_data(setlist_path)
-                data["message"] = message
-                self.send(200, data)
-            except (KeyError, LookupError) as e:
-                self.send(404, {"error": str(e)})
-            except ValueError as e:
-                self.send(409, {"error": str(e)})
-            except Exception as e:
-                self.send(500, {"error": f"{type(e).__name__}: {e}"})
-
-    return Handler
-
-
-def serve(port=8765, open_browser=True, setlist_path="setlist.txt"):
-    """Serve the review page and save its edits to the catalog and the setlist file."""
-    import threading
-    import webbrowser
-
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", port), make_handler(setlist_path, port))
-    url = f"http://127.0.0.1:{port}/"
-    print(f"patch library at {url}  (Ctrl+C to stop)")
-    print(f"edits go to {CATALOG}, the setlist to {setlist_path}; double-click a card to edit it")
-    if open_browser:
-        threading.Timer(0.5, webbrowser.open, args=(url,)).start()
+def serve(options):
+    """Start the library web page: an Astro app in web/, with the catalog and the setlist as its data."""
+    web = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
+    if not os.path.isdir(os.path.join(web, "node_modules")):
+        sys.exit(f"install the page's packages once: cd {web} && npm install")
+    env = dict(os.environ)
+    env.setdefault("VR09_ROOT", os.getcwd())
+    if "--setlist" in options:
+        env["VR09_SETLIST"] = os.path.abspath(options[options.index("--setlist") + 1])
+    extra = ["--port", options[options.index("--port") + 1]] if "--port" in options else []
+    script = "dev" if "--no-browser" in options else "start"  # start opens the browser
+    command = ["npm", "run", script, "--prefix", web] + (["--"] + extra if extra else [])
     try:
-        server.serve_forever()
+        sys.exit(subprocess.run(command, env=env).returncode)
     except KeyboardInterrupt:
-        print("\nstopped")
-    finally:
-        server.server_close()
+        sys.exit(0)
 
 
 def unique_key(key, patches):
@@ -1163,10 +748,7 @@ if __name__ == "__main__":
     elif command == "sync":
         sync()
     elif command in ("serve", "review"):
-        options = args[1:]
-        port = int(options[options.index("--port") + 1]) if "--port" in options else 8765
-        setlist_file = options[options.index("--setlist") + 1] if "--setlist" in options else "setlist.txt"
-        serve(port, "--no-browser" not in options, setlist_file)
+        serve(args[1:])
     elif command == "setlist":
         make_setlist(args[1] if len(args) > 1 else "setlist.txt")
     elif command == "reread":
