@@ -2,7 +2,7 @@
  "name": "tone-synth-test-a",
  "patch_type": "single tone",
  "summary": "Test set A for one synth tone: expression, cutoff, vibrato depth and resonance, all as CCs.",
- "status": "every address verified; CC targets need listening",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -70,11 +70,6 @@
   }
  ],
  "unavailable_targets": [],
- "untested_targets": [
-  "cc-upper-cutoff",
-  "cc-upper-expression",
-  "cc-upper-resonance",
-  "cc-upper-vibrato-depth"
- ],
+ "untested_targets": [],
  "dead_axes": []
 }

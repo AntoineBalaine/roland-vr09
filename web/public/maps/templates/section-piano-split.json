@@ -1,8 +1,8 @@
 {
  "name": "section-piano-split",
  "patch_type": "piano split",
- "summary": "Upper piano over a lower synth: body swells the piano, tone and modulation play the lower synth.",
- "status": "every address verified; CC targets need listening",
+ "summary": "Upper piano over a lower synth: body swells the piano, tone and modulation play the lower synth. Reworked after listening tests: cc-upper-reverb -> cc-upper-cutoff.",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -57,9 +57,9 @@
    "role": "effects",
    "targets": [
     {
-     "target": "cc-upper-reverb",
-     "low": 10,
-     "high": 100,
+     "target": "cc-upper-cutoff",
+     "low": 40,
+     "high": 127,
      "window": [
       0,
       127
@@ -70,8 +70,6 @@
   }
  ],
  "unavailable_targets": [],
- "untested_targets": [
-  "cc-upper-reverb"
- ],
+ "untested_targets": [],
  "dead_axes": []
 }

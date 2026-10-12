@@ -1,8 +1,8 @@
 {
  "name": "organ-rock-grit",
  "patch_type": "organ",
- "summary": "Overdrive and the dry mix move in opposite directions so the grit grows without losing the attack.",
- "status": "needs rework: no working target on axis CC18",
+ "summary": "Overdrive and the dry mix move in opposite directions so the grit grows without losing the attack. Reworked after listening tests: overdrive-dry -> click-on; eq-high -> tweeter-fast; eq-low -> woofer-fast.",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -35,9 +35,9 @@
      "curve": "soft"
     },
     {
-     "target": "overdrive-dry",
-     "low": 127,
-     "high": 40,
+     "target": "click-on",
+     "low": 0,
+     "high": 50,
      "window": [
       0,
       127
@@ -51,9 +51,9 @@
    "role": "modulation",
    "targets": [
     {
-     "target": "eq-high",
-     "low": 52,
-     "high": 76,
+     "target": "tweeter-fast",
+     "low": 60,
+     "high": 127,
      "window": [
       0,
       127
@@ -61,9 +61,9 @@
      "curve": "linear"
     },
     {
-     "target": "eq-low",
-     "low": 76,
-     "high": 56,
+     "target": "woofer-fast",
+     "low": 60,
+     "high": 127,
      "window": [
       0,
       127
@@ -99,13 +99,7 @@
    ]
   }
  ],
- "unavailable_targets": [
-  "eq-high",
-  "eq-low",
-  "overdrive-dry"
- ],
+ "unavailable_targets": [],
  "untested_targets": [],
- "dead_axes": [
-  18
- ]
+ "dead_axes": []
 }

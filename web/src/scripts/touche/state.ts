@@ -131,7 +131,11 @@ export const PANEL: Section[][] = [
     {
       title: "Lower part",
       note: "CC, channel 3",
-      widgets: [knob("cc-lower-cutoff", "Cutoff"), knob("cc-lower-expression", "Expr"), knob("cc-lower-reverb", "Reverb"), knob("cc-lower-chorus", "Chorus")],
+      widgets: [
+        knob("cc-lower-cutoff", "Cutoff"), knob("cc-lower-resonance", "Reso"), knob("cc-lower-attack", "Attack"), knob("cc-lower-decay", "Decay"),
+        knob("cc-lower-release", "Release"), knob("cc-lower-vibrato-depth", "Vib depth"), knob("cc-lower-vibrato-rate", "Vib rate"),
+        knob("cc-lower-modulation", "Mod"), knob("cc-lower-expression", "Expr"), knob("cc-lower-reverb", "Reverb"), knob("cc-lower-chorus", "Chorus"),
+      ],
     },
     {
       title: "Piano dual 2",
@@ -204,8 +208,18 @@ export function modById(id: number | null): Mod | undefined {
   return undefined;
 }
 
+// The address versions of the synth's sound-shaping controls are switched off while the CC versions are tried by ear,
+// to learn whether the two act on the same values or stack. Controls with no CC version (organ, rotary, volumes) stay on.
+const PAUSED_ADDRESS_CONTROLS = new Set(
+  ["upper-synth", "lower-synth"].flatMap((part) => ["resonance", "attack", "decay", "release", "cutoff", "portamento"].map((name) => `${part}-${name}`)),
+);
+
+export function isPaused(target: Target | undefined): boolean {
+  return !!target && PAUSED_ADDRESS_CONTROLS.has(target.id);
+}
+
 export function isAvailable(target: Target | undefined): boolean {
-  return !!target && target.status !== "unavailable";
+  return !!target && target.status !== "unavailable" && !isPaused(target);
 }
 
 export function curved(x: number, curve: string): number {

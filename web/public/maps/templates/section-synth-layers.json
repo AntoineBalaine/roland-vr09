@@ -2,7 +2,7 @@
  "name": "section-synth-layers",
  "patch_type": "synth layers",
  "summary": "Upper synth and its dual 2 layer: body swells the main layer, tone opens the cutoff, modulation raises the resonance, effects blend in the second layer.",
- "status": "every address verified; CC targets need listening",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -70,8 +70,6 @@
   }
  ],
  "unavailable_targets": [],
- "untested_targets": [
-  "cc-upper-cutoff"
- ],
+ "untested_targets": [],
  "dead_axes": []
 }

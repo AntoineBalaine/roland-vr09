@@ -528,5 +528,145 @@
     "verdict": "accepted",
     "label": "Lower synth volume",
     "at": "2026-10-12T01:32:49.195Z"
+  },
+  "cc-upper-cutoff": {
+    "kind": "cc",
+    "label": "Upper synth cutoff (CC74)",
+    "heard": true,
+    "at": "2026-10-12T20:23:12.000Z",
+    "heard_on": "reported by the user, tone not recorded"
+  },
+  "cc-upper-expression": {
+    "kind": "cc",
+    "label": "Upper expression (CC11)",
+    "heard": true,
+    "at": "2026-10-12T20:22:44.589Z",
+    "heard_on": "Super Saw Ld (synth, SYNTH LEAD)"
+  },
+  "cc-upper-vibrato-depth": {
+    "kind": "cc",
+    "label": "Upper vibrato depth (CC77)",
+    "heard": true,
+    "at": "2026-10-12T20:22:55.127Z",
+    "heard_on": "Super Saw Ld (synth, SYNTH LEAD)"
+  },
+  "cc-upper-resonance": {
+    "kind": "cc",
+    "label": "Upper resonance (CC71)",
+    "heard": true,
+    "at": "2026-10-12T20:22:55.961Z",
+    "heard_on": "Super Saw Ld (synth, SYNTH LEAD)"
+  },
+  "cc-upper-vibrato-rate": {
+    "kind": "cc",
+    "label": "Upper vibrato rate (CC76)",
+    "heard": true,
+    "at": "2026-10-12T20:35:59Z",
+    "heard_on": "Super Saw Ld on the upper synth"
+  },
+  "cc-upper-reverb": {
+    "kind": "cc",
+    "label": "Upper reverb send (CC91)",
+    "heard": false,
+    "at": "2026-10-12T20:36:23Z",
+    "heard_on": "Super Saw Ld on the upper synth"
+  },
+  "cc-upper-pan": {
+    "kind": "cc",
+    "label": "Upper pan (CC10)",
+    "heard": false,
+    "at": "2026-10-12T20:38:05Z",
+    "heard_on": "Super Saw Ld on the upper synth"
+  },
+  "cc-upper-release": {
+    "kind": "cc",
+    "label": "Upper release (CC72)",
+    "heard": true,
+    "at": "2026-10-12T20:38:37Z",
+    "heard_on": "Super Saw Ld on the upper synth"
+  },
+  "cc-upper-attack": {
+    "kind": "cc",
+    "label": "Upper attack (CC73)",
+    "heard": true,
+    "at": "2026-10-12T20:38:44Z",
+    "heard_on": "Super Saw Ld on the upper synth"
+  },
+  "cc-upper-modulation": {
+    "kind": "cc",
+    "label": "Upper modulation wheel (CC1)",
+    "heard": true,
+    "at": "2026-10-12T20:38:59Z",
+    "heard_on": "Super Saw Ld on the upper synth"
+  },
+  "cc-master-expression": {
+    "kind": "cc",
+    "label": "Overall volume (CC11 on channel 16)",
+    "heard": true,
+    "at": "2026-10-12T20:39:06Z",
+    "heard_on": "Super Saw Ld on the upper synth"
+  },
+  "cc-lower-cutoff": {
+    "kind": "cc",
+    "label": "Lower synth cutoff (CC74)",
+    "heard": true,
+    "at": "2026-10-12T20:39:14Z",
+    "heard_on": "the Sweep Pad of the lower synth (12-3 DIMPnooBrill)"
+  },
+  "cc-lower-reverb": {
+    "kind": "cc",
+    "label": "Lower reverb send (CC91)",
+    "heard": true,
+    "at": "2026-10-12T20:39:21Z",
+    "heard_on": "the Sweep Pad of the lower synth (12-3 DIMPnooBrill)"
+  },
+  "cc-lower-expression": {
+    "kind": "cc",
+    "label": "Lower expression (CC11)",
+    "heard": true,
+    "at": "2026-10-12T20:39:36Z",
+    "heard_on": "the Sweep Pad of the lower synth (12-3 DIMPnooBrill)"
+  },
+  "cc-piano-reverb": {
+    "kind": "cc",
+    "label": "Piano (dual 2) reverb send (CC91)",
+    "heard": false,
+    "at": "2026-10-12T20:39:52Z",
+    "heard_on": "the second piano layer of 3-1 Chowii EP"
+  },
+  "cc-piano-chorus": {
+    "kind": "cc",
+    "label": "Piano (dual 2) chorus send (CC93)",
+    "heard": true,
+    "at": "2026-10-12T20:39:59Z",
+    "heard_on": "the second piano layer of 3-1 Chowii EP"
+  },
+  "cc-piano-expression": {
+    "kind": "cc",
+    "label": "Piano (dual 2) expression (CC11)",
+    "heard": true,
+    "at": "2026-10-12T20:40:06Z",
+    "heard_on": "the second piano layer of 3-1 Chowii EP"
+  },
+  "cc-upper-chorus": {
+    "kind": "cc",
+    "label": "Upper chorus send (CC93)",
+    "heard": true,
+    "at": "2026-10-12T20:51:02Z",
+    "heard_on": "Saw Lead 1 on the upper synth (a plain saw, no supersaw detune)"
+  },
+  "cc-upper-decay": {
+    "kind": "cc",
+    "label": "Upper decay (CC75)",
+    "heard": true,
+    "at": "2026-10-12T20:51:23Z",
+    "heard_on": "Steel-str.Gt on the upper synth (a plucked string that rings and decays)"
+  },
+  "cc-lower-chorus": {
+    "kind": "cc",
+    "label": "Lower chorus send (CC93)",
+    "heard": true,
+    "at": "2026-10-12T20:51:32Z",
+    "heard_on": "Saw Lead 1 on the lower synth (a plain saw, no supersaw detune)"
   }
 }

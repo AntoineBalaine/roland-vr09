@@ -1,8 +1,8 @@
 {
  "name": "organ-ballad-warm",
  "patch_type": "organ",
- "summary": "A warm ballad sound: the tone axis darkens the EQ while the low drawbars rise.",
- "status": "partly working: eq-high are unavailable on this unit",
+ "summary": "A warm ballad sound: the tone axis darkens the EQ while the low drawbars rise. Reworked after listening tests: eq-high -> leakage; cc-upper-reverb -> click-on.",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -35,9 +35,9 @@
    "role": "tone",
    "targets": [
     {
-     "target": "eq-high",
-     "low": 62,
-     "high": 52,
+     "target": "leakage",
+     "low": 0,
+     "high": 70,
      "window": [
       0,
       127
@@ -77,9 +77,9 @@
    "role": "effects",
    "targets": [
     {
-     "target": "cc-upper-reverb",
-     "low": 20,
-     "high": 100,
+     "target": "click-on",
+     "low": 0,
+     "high": 50,
      "window": [
       0,
       127
@@ -89,11 +89,7 @@
    ]
   }
  ],
- "unavailable_targets": [
-  "eq-high"
- ],
- "untested_targets": [
-  "cc-upper-reverb"
- ],
+ "unavailable_targets": [],
+ "untested_targets": [],
  "dead_axes": []
 }

@@ -1,8 +1,8 @@
 {
  "name": "synth-strings-ensemble",
  "patch_type": "synth strings",
- "summary": "String sections: slow attack, chorus on the effects axis, vibrato on the modulation axis.",
- "status": "needs rework: no working target on axis CC17",
+ "summary": "String sections: slow attack, chorus on the effects axis, vibrato on the modulation axis. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -25,9 +25,9 @@
    "role": "tone",
    "targets": [
     {
-     "target": "upper-synth-cutoff",
-     "low": 40,
-     "high": 120,
+     "target": "cc-upper-cutoff",
+     "low": 30,
+     "high": 127,
      "window": [
       0,
       127
@@ -67,9 +67,9 @@
      "curve": "linear"
     },
     {
-     "target": "cc-upper-reverb",
-     "low": 20,
-     "high": 90,
+     "target": "cc-upper-resonance",
+     "low": 64,
+     "high": 105,
      "window": [
       0,
       127
@@ -79,15 +79,7 @@
    ]
   }
  ],
- "unavailable_targets": [
-  "upper-synth-cutoff"
- ],
- "untested_targets": [
-  "cc-upper-chorus",
-  "cc-upper-reverb",
-  "cc-upper-vibrato-depth"
- ],
- "dead_axes": [
-  17
- ]
+ "unavailable_targets": [],
+ "untested_targets": [],
+ "dead_axes": []
 }

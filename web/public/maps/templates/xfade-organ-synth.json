@@ -1,8 +1,8 @@
 {
  "name": "xfade-organ-synth",
  "patch_type": "layer",
- "summary": "Crossfade the organ into the upper synth.",
- "status": "every address verified; CC targets need listening",
+ "summary": "Crossfade the organ into the upper synth. Reworked after listening tests: cc-upper-reverb -> cc-upper-resonance.",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -57,9 +57,9 @@
    "role": "effects",
    "targets": [
     {
-     "target": "cc-upper-reverb",
-     "low": 10,
-     "high": 90,
+     "target": "cc-upper-resonance",
+     "low": 64,
+     "high": 105,
      "window": [
       0,
       127
@@ -70,8 +70,6 @@
   }
  ],
  "unavailable_targets": [],
- "untested_targets": [
-  "cc-upper-reverb"
- ],
+ "untested_targets": [],
  "dead_axes": []
 }

@@ -368,6 +368,13 @@ function valueFromPointer(event: PointerEvent): number {
   const target = ctx.targets[drag.target];
   const box = drag.svg.getBoundingClientRect();
   let f = 0;
+  if (drag.kind === "knob" && drag.mode === "handle") {
+    // A ring handle follows the vertical movement of the mouse from where the drag started, like the knob itself:
+    // the whole range of the control takes 150 pixels, and sideways movement counts for nothing.
+    const span = target.high - target.low;
+    const value = drag.startValue + ((drag.startY - event.clientY) / 150) * span;
+    return Math.round(Math.max(Math.min(target.low, target.high), Math.min(Math.max(target.low, target.high), value)));
+  }
   if (drag.kind === "drawbar") {
     // The drawbar's slot spans 10 to 110 of its 128-unit height.
     const y = ((event.clientY - box.top) / box.height) * 128;
@@ -393,7 +400,8 @@ function onPanelPointerDown(event: PointerEvent): void {
     if (!mod || !svg) return;
     event.preventDefault();
     const kind = svg.dataset.kind === "drawbar" ? "drawbar" : "knob";
-    ctx.drag = { mode: "handle", mod: mod.id, end: handle.dataset.end === "low" ? "low" : "high", target: mod.target, kind, svg, startY: event.clientY, startValue: 0 };
+    const end = handle.dataset.end === "low" ? "low" : "high";
+    ctx.drag = { mode: "handle", mod: mod.id, end, target: mod.target, kind, svg, startY: event.clientY, startValue: mod[end] };
     document.body.classList.add("dragging-handle");
     return;
   }

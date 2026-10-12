@@ -802,8 +802,9 @@
   "cc": 77,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-upper-vibrato-rate",
@@ -813,8 +814,9 @@
   "cc": 76,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-upper-reverb",
@@ -824,8 +826,9 @@
   "cc": 91,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "unavailable",
+  "note": "",
+  "evidence": "nothing was heard, 2026-10-12"
  },
  {
   "id": "cc-upper-chorus",
@@ -835,8 +838,9 @@
   "cc": 93,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-upper-expression",
@@ -846,8 +850,9 @@
   "cc": 11,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-upper-pan",
@@ -857,8 +862,9 @@
   "cc": 10,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "unavailable",
+  "note": "",
+  "evidence": "nothing was heard, 2026-10-12"
  },
  {
   "id": "cc-upper-cutoff",
@@ -868,8 +874,9 @@
   "cc": 74,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-lower-cutoff",
@@ -879,8 +886,9 @@
   "cc": 74,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-upper-resonance",
@@ -890,8 +898,9 @@
   "cc": 71,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-upper-release",
@@ -901,8 +910,9 @@
   "cc": 72,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-upper-attack",
@@ -912,8 +922,9 @@
   "cc": 73,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-upper-decay",
@@ -923,8 +934,9 @@
   "cc": 75,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-upper-modulation",
@@ -934,8 +946,9 @@
   "cc": 1,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-lower-reverb",
@@ -945,8 +958,9 @@
   "cc": 91,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-lower-chorus",
@@ -956,8 +970,9 @@
   "cc": 93,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-lower-expression",
@@ -967,8 +982,9 @@
   "cc": 11,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-piano-reverb",
@@ -976,6 +992,84 @@
   "kind": "cc",
   "channel": 1,
   "cc": 91,
+  "low": 0,
+  "high": 127,
+  "status": "unavailable",
+  "note": "",
+  "evidence": "nothing was heard, 2026-10-12"
+ },
+ {
+  "id": "cc-lower-resonance",
+  "label": "Lower resonance (CC71)",
+  "kind": "cc",
+  "channel": 3,
+  "cc": 71,
+  "low": 0,
+  "high": 127,
+  "status": "documented",
+  "note": ""
+ },
+ {
+  "id": "cc-lower-release",
+  "label": "Lower release (CC72)",
+  "kind": "cc",
+  "channel": 3,
+  "cc": 72,
+  "low": 0,
+  "high": 127,
+  "status": "documented",
+  "note": ""
+ },
+ {
+  "id": "cc-lower-attack",
+  "label": "Lower attack (CC73)",
+  "kind": "cc",
+  "channel": 3,
+  "cc": 73,
+  "low": 0,
+  "high": 127,
+  "status": "documented",
+  "note": ""
+ },
+ {
+  "id": "cc-lower-decay",
+  "label": "Lower decay (CC75)",
+  "kind": "cc",
+  "channel": 3,
+  "cc": 75,
+  "low": 0,
+  "high": 127,
+  "status": "documented",
+  "note": ""
+ },
+ {
+  "id": "cc-lower-vibrato-depth",
+  "label": "Lower vibrato depth (CC77)",
+  "kind": "cc",
+  "channel": 3,
+  "cc": 77,
+  "low": 0,
+  "high": 127,
+  "status": "documented",
+  "note": ""
+ },
+ {
+  "id": "cc-lower-vibrato-rate",
+  "label": "Lower vibrato rate (CC76)",
+  "kind": "cc",
+  "channel": 3,
+  "cc": 76,
+  "low": 0,
+  "high": 127,
+  "status": "documented",
+  "note": ""
+ },
+ {
+  "id": "cc-lower-modulation",
+  "label": "Lower modulation wheel (CC1)",
+  "kind": "cc",
+  "channel": 3,
+  "cc": 1,
   "low": 0,
   "high": 127,
   "status": "documented",
@@ -989,8 +1083,9 @@
   "cc": 93,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-piano-expression",
@@ -1000,8 +1095,9 @@
   "cc": 11,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  },
  {
   "id": "cc-master-expression",
@@ -1011,7 +1107,8 @@
   "cc": 11,
   "low": 0,
   "high": 127,
-  "status": "documented",
-  "note": ""
+  "status": "verified",
+  "note": "",
+  "evidence": "a change was heard, 2026-10-12"
  }
 ]

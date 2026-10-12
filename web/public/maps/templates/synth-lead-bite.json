@@ -1,8 +1,8 @@
 {
  "name": "synth-lead-bite",
  "patch_type": "synth lead",
- "summary": "A biting lead: resonance on the body axis, cutoff on the tone axis.",
- "status": "needs rework: no working target on axis CC17, CC18",
+ "summary": "A biting lead: resonance on the body axis, cutoff on the tone axis. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; upper-synth-portamento -> cc-upper-release.",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -25,8 +25,8 @@
    "role": "tone",
    "targets": [
     {
-     "target": "upper-synth-cutoff",
-     "low": 20,
+     "target": "cc-upper-cutoff",
+     "low": 30,
      "high": 127,
      "window": [
       0,
@@ -41,9 +41,9 @@
    "role": "modulation",
    "targets": [
     {
-     "target": "upper-synth-portamento",
-     "low": 0,
-     "high": 70,
+     "target": "cc-upper-release",
+     "low": 64,
+     "high": 110,
      "window": [
       0,
       127
@@ -69,13 +69,7 @@
    ]
   }
  ],
- "unavailable_targets": [
-  "upper-synth-cutoff",
-  "upper-synth-portamento"
- ],
+ "unavailable_targets": [],
  "untested_targets": [],
- "dead_axes": [
-  17,
-  18
- ]
+ "dead_axes": []
 }

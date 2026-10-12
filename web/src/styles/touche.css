@@ -90,7 +90,7 @@ svg .slot { fill: #0e0f11; stroke: #3a3f45; }
 svg .tick { stroke: #4a4f56; }
 svg .ring-arc, svg .ring-hit { cursor: pointer; }
 svg .ring.selected .ring-arc { filter: drop-shadow(0 0 2px #fff8); }
-svg .handle { cursor: grab; }
+svg .handle { cursor: ns-resize; }
 .dest:not(.unavailable) svg.knob { cursor: ns-resize; }
 .dest:not(.unavailable) svg.drawbar { cursor: row-resize; }
 .dragging-handle, .dragging-handle * { cursor: grabbing !important; user-select: none; }

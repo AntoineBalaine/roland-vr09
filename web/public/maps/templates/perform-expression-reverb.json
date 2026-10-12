@@ -1,8 +1,8 @@
 {
  "name": "perform-expression-reverb",
  "patch_type": "any",
- "summary": "A neutral performance template: overall volume, reverb and chorus sends.",
- "status": "every address verified; CC targets need listening",
+ "summary": "A neutral performance template: overall volume, reverb and chorus sends. Reworked after listening tests: cc-upper-reverb -> cc-upper-resonance.",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -25,9 +25,9 @@
    "role": "tone",
    "targets": [
     {
-     "target": "cc-upper-reverb",
-     "low": 0,
-     "high": 110,
+     "target": "cc-upper-resonance",
+     "low": 64,
+     "high": 105,
      "window": [
       0,
       127
@@ -70,11 +70,6 @@
   }
  ],
  "unavailable_targets": [],
- "untested_targets": [
-  "cc-master-expression",
-  "cc-upper-chorus",
-  "cc-upper-reverb",
-  "cc-upper-vibrato-depth"
- ],
+ "untested_targets": [],
  "dead_axes": []
 }

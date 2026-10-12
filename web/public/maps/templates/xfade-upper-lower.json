@@ -1,8 +1,8 @@
 {
  "name": "xfade-upper-lower",
  "patch_type": "layer",
- "summary": "Crossfade between the upper and lower synth parts.",
- "status": "needs rework: no working target on axis CC18, CC19",
+ "summary": "Crossfade between the upper and lower synth parts. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; lower-synth-cutoff -> cc-lower-cutoff.",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -41,9 +41,9 @@
    "role": "modulation",
    "targets": [
     {
-     "target": "upper-synth-cutoff",
-     "low": 40,
-     "high": 120,
+     "target": "cc-upper-cutoff",
+     "low": 30,
+     "high": 127,
      "window": [
       0,
       127
@@ -57,9 +57,9 @@
    "role": "effects",
    "targets": [
     {
-     "target": "lower-synth-cutoff",
-     "low": 40,
-     "high": 120,
+     "target": "cc-lower-cutoff",
+     "low": 30,
+     "high": 127,
      "window": [
       0,
       127
@@ -69,13 +69,7 @@
    ]
   }
  ],
- "unavailable_targets": [
-  "lower-synth-cutoff",
-  "upper-synth-cutoff"
- ],
+ "unavailable_targets": [],
  "untested_targets": [],
- "dead_axes": [
-  18,
-  19
- ]
+ "dead_axes": []
 }

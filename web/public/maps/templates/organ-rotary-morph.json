@@ -1,8 +1,8 @@
 {
  "name": "organ-rotary-morph",
  "patch_type": "organ",
- "summary": "All four axes shape the rotary speaker instead of the tone.",
- "status": "needs rework: no working target on axis CC19",
+ "summary": "All four axes shape the rotary speaker instead of the tone. Reworked after listening tests: axis CC19 -> overdrive.",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -87,9 +87,9 @@
    "role": "effects",
    "targets": [
     {
-     "target": "rotary-brake",
+     "target": "overdrive",
      "low": 0,
-     "high": 1,
+     "high": 90,
      "window": [
       0,
       127
@@ -99,11 +99,7 @@
    ]
   }
  ],
- "unavailable_targets": [
-  "rotary-brake"
- ],
+ "unavailable_targets": [],
  "untested_targets": [],
- "dead_axes": [
-  19
- ]
+ "dead_axes": []
 }

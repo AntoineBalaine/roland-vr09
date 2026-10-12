@@ -1,8 +1,8 @@
 {
  "name": "organ-dynamic-volume",
  "patch_type": "organ",
- "summary": "The body axis is an organ volume pedal.",
- "status": "needs rework: no working target on axis CC17",
+ "summary": "The body axis is an organ volume pedal. Reworked after listening tests: eq-high -> leakage.",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -25,9 +25,9 @@
    "role": "tone",
    "targets": [
     {
-     "target": "eq-high",
-     "low": 52,
-     "high": 76,
+     "target": "leakage",
+     "low": 0,
+     "high": 70,
      "window": [
       0,
       127
@@ -69,11 +69,7 @@
    ]
   }
  ],
- "unavailable_targets": [
-  "eq-high"
- ],
+ "unavailable_targets": [],
  "untested_targets": [],
- "dead_axes": [
-  17
- ]
+ "dead_axes": []
 }

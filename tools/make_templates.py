@@ -97,6 +97,11 @@ def build_targets():
         cc("cc-upper-modulation", "Upper modulation wheel (CC1)", 4, 1),
         cc("cc-lower-reverb", "Lower reverb send (CC91)", 3, 91), cc("cc-lower-chorus", "Lower chorus send (CC93)", 3, 93),
         cc("cc-lower-expression", "Lower expression (CC11)", 3, 11), cc("cc-piano-reverb", "Piano (dual 2) reverb send (CC91)", 1, 91),
+        # The lower part presumably obeys the same controllers as the upper one, but only its cutoff, reverb, chorus and expression were heard.
+        cc("cc-lower-resonance", "Lower resonance (CC71)", 3, 71), cc("cc-lower-release", "Lower release (CC72)", 3, 72),
+        cc("cc-lower-attack", "Lower attack (CC73)", 3, 73), cc("cc-lower-decay", "Lower decay (CC75)", 3, 75),
+        cc("cc-lower-vibrato-depth", "Lower vibrato depth (CC77)", 3, 77), cc("cc-lower-vibrato-rate", "Lower vibrato rate (CC76)", 3, 76),
+        cc("cc-lower-modulation", "Lower modulation wheel (CC1)", 3, 1),
         cc("cc-piano-chorus", "Piano (dual 2) chorus send (CC93)", 1, 93), cc("cc-piano-expression", "Piano (dual 2) expression (CC11)", 1, 11),
         cc("cc-master-expression", "Overall volume (CC11 on channel 16)", 16, 11),
     ]
@@ -291,6 +296,91 @@ def build_templates():
     return out
 
 
+# ---- repair: a target the unit refuses, or that was heard to do nothing, is replaced by one that works ----
+# Each entry is (replacement, low, high), tried in order; a replacement already used by the same mapping is skipped.
+# The replacement keeps the window and the curve of the target it replaces. Ranges are those of the replacement.
+SUBSTITUTES = {
+    "synth": {
+        "upper-synth-cutoff": [("cc-upper-cutoff", 30, 127)],
+        "lower-synth-cutoff": [("cc-lower-cutoff", 30, 127)],
+        "upper-synth-portamento": [("cc-upper-release", 64, 110), ("cc-upper-modulation", 0, 80)],
+        "lower-synth-portamento": [("cc-lower-expression", 60, 127)],
+        "cc-upper-reverb": [("cc-upper-resonance", 64, 105), ("cc-upper-release", 64, 110), ("cc-upper-vibrato-depth", 64, 100)],
+        "cc-upper-pan": [("cc-upper-vibrato-rate", 64, 110), ("cc-upper-modulation", 0, 70)],
+    },
+    "piano": {
+        "cc-piano-reverb": [("cc-upper-expression", 60, 127), ("cc-upper-resonance", 64, 100)],
+        "cc-upper-reverb": [("cc-upper-cutoff", 40, 127), ("cc-upper-resonance", 64, 100)],
+        "cc-upper-pan": [("cc-upper-cutoff", 40, 127), ("cc-upper-modulation", 0, 70)],
+        "upper-synth-cutoff": [("cc-upper-cutoff", 40, 127)],
+        "lower-synth-cutoff": [("cc-lower-cutoff", 40, 127)],
+    },
+    "organ": {
+        "cc-upper-reverb": [("leakage", 0, 90), ("click-on", 0, 50)],
+        "eq-high": [("leakage", 0, 70), ("tweeter-fast", 60, 127)],
+        "eq-low": [("woofer-fast", 60, 127), ("click-off", 0, 40)],
+        "overdrive-dry": [("click-on", 0, 50)],
+        "rotary-brake": [("woofer-slow", 20, 100)],
+    },
+}
+# An axis left with no target at all gets the first of these that its mapping does not use yet.
+FALLBACKS = {
+    "synth": {16: [("cc-upper-expression", 50, 127)], 17: [("cc-upper-cutoff", 30, 127)],
+              18: [("cc-upper-vibrato-depth", 64, 100), ("cc-upper-modulation", 0, 80)],
+              19: [("cc-upper-resonance", 64, 105), ("cc-upper-release", 64, 110), ("cc-upper-attack", 64, 100)]},
+    "piano": {16: [("cc-upper-expression", 60, 127)], 17: [("cc-upper-cutoff", 40, 127)],
+              18: [("cc-upper-vibrato-depth", 64, 95), ("cc-upper-modulation", 0, 70)],
+              19: [("cc-upper-resonance", 64, 100), ("cc-upper-release", 64, 100)]},
+    "organ": {16: [("organ-level", 70, 127)], 17: [("leakage", 0, 90), ("tweeter-fast", 60, 127)],
+              18: [("rotary-fast", 0, 1), ("woofer-fast", 60, 127)], 19: [("overdrive", 0, 90), ("click-on", 0, 50)]},
+}
+
+
+def family(tpl):
+    if tpl["patch_type"].startswith("organ") or tpl["name"].startswith("organ-"):
+        return "organ"
+    if "piano" in tpl["patch_type"] or tpl["name"].startswith(("piano-", "section-piano")):
+        return "piano"
+    return "synth"
+
+
+def repair(templates, targets):
+    """Swap every target that does not work for one that does, and say so in the summary of the mapping."""
+    status = {x["id"]: x["status"] for x in targets}
+
+    def works(i):
+        return status.get(i) != "unavailable"
+
+    for tpl in templates:
+        kind = family(tpl)
+        used = {item["target"] for axis in tpl["axes"] for item in axis["targets"]}
+        swaps = []
+        for axis in tpl["axes"]:
+            kept = []
+            for item in axis["targets"]:
+                if works(item["target"]):
+                    kept.append(item)
+                    continue
+                for sub, low, high in SUBSTITUTES[kind].get(item["target"], []):
+                    if sub not in used and works(sub):
+                        kept.append(t(sub, low, high, tuple(item["window"]), item["curve"]))
+                        used.add(sub)
+                        swaps.append(f"{item['target']} -> {sub}")
+                        break
+            axis["targets"] = kept
+        for axis in tpl["axes"]:
+            if axis["targets"]:
+                continue
+            for sub, low, high in FALLBACKS[kind][axis["axis"]]:
+                if sub not in used and works(sub):
+                    axis["targets"].append(t(sub, low, high))
+                    used.add(sub)
+                    swaps.append(f"axis CC{axis['axis']} -> {sub}")
+                    break
+        if swaps:
+            tpl["summary"] += " Reworked after listening tests: " + "; ".join(swaps) + "."
+
+
 def check(targets, templates):
     ids = {x["id"] for x in targets}
     assert len(ids) == len(targets), "duplicate target ids"
@@ -312,6 +402,7 @@ def main():
     targets, templates = build_targets(), build_templates()
     results = json.load(open(TESTS)) if os.path.exists(TESTS) else {}
     apply_tests(targets, results)
+    repair(templates, targets)
     check(targets, templates)
     assess(templates, targets)
     os.makedirs(os.path.join(out_dir, "templates"), exist_ok=True)

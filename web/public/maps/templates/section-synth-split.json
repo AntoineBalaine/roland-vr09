@@ -2,7 +2,7 @@
  "name": "section-synth-split",
  "patch_type": "synth split",
  "summary": "Upper synth over a lower synth: body swells the upper part, tone opens its cutoff, modulation and effects play the lower part.",
- "status": "every address verified; CC targets need listening",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -70,8 +70,6 @@
   }
  ],
  "unavailable_targets": [],
- "untested_targets": [
-  "cc-upper-cutoff"
- ],
+ "untested_targets": [],
  "dead_axes": []
 }

@@ -1,7 +1,7 @@
 // Drawing of the mapping editor: the keyboard panel with its rings and drawbar ranges, the Touché sources, and
 // the modulations table. Every function returns markup or updates one element; the events are in editor.ts.
 import {
-  AXES, AXIS_COLORS, AXIS_NAMES, CURVES, PANEL, ctx, isAvailable, modById, modValue, modsOfTarget, unplacedTargets,
+  AXES, AXIS_COLORS, AXIS_NAMES, CURVES, PANEL, ctx, isAvailable, isPaused, modById, modValue, modsOfTarget, unplacedTargets,
   type Mod, type Target, type Widget,
 } from "./state";
 
@@ -62,6 +62,15 @@ function ringTitle(mod: Mod, target: Target): string {
   return `${AXIS_NAMES[mod.axis]} (CC${mod.axis}) → ${target.label}: ${mod.low} to ${mod.high}, ${window}, ${mod.curve}`;
 }
 
+// A handle is the small circle at either end of a modulation's ring: hollow for the start (the value at rest), filled
+  // for the end (the value at full travel). An invisible larger circle under it makes it easy to grab.
+function handleSvg(mod: Mod, end: "low" | "high", cx: number, cy: number, color: string, tip: string): string {
+  const where = `data-mod="${mod.id}" data-end="${end}" cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}"`;
+  const look = end === "low" ? `r="4" fill="#15171a" stroke="${color}" stroke-width="2"` : `r="4" fill="${color}"`;
+  return `<circle class="handle grab" ${where} r="9" fill="transparent"><title>${tip}</title></circle>` +
+    `<circle class="handle" ${where} ${look} pointer-events="none"/>`;
+}
+
 function knobRing(mod: Mod, target: Target, index: number): string {
   const color = AXIS_COLORS[mod.axis];
   const radius = KNOB.firstRing + index * KNOB.ringStep;
@@ -82,8 +91,8 @@ function knobRing(mod: Mod, target: Target, index: number): string {
   if (selected) {
     const [sx, sy] = polar(radius, from);
     const [ex, ey] = polar(radius, to);
-    svg += `<circle class="handle" data-mod="${mod.id}" data-end="low" cx="${sx.toFixed(2)}" cy="${sy.toFixed(2)}" r="4" fill="#15171a" stroke="${color}" stroke-width="2"><title>Start: the value at rest (${mod.low})</title></circle>`;
-    svg += `<circle class="handle" data-mod="${mod.id}" data-end="high" cx="${ex.toFixed(2)}" cy="${ey.toFixed(2)}" r="4" fill="${color}"><title>End: the value at full travel (${mod.high})</title></circle>`;
+    svg += handleSvg(mod, "low", sx, sy, color, `Start: the value at rest (${mod.low})`);
+    svg += handleSvg(mod, "high", ex, ey, color, `End: the value at full travel (${mod.high})`);
   }
   return svg + "</g>";
 }
@@ -129,8 +138,8 @@ function drawbarLane(mod: Mod, target: Target, index: number): string {
   const live = ctx.liveOut.get(mod.id);
   if (live !== undefined) svg += `<circle cx="${x}" cy="${drawbarY(target, live).toFixed(2)}" r="2" fill="#fff" pointer-events="none"/>`;
   if (selected) {
-    svg += `<circle class="handle" data-mod="${mod.id}" data-end="low" cx="${x}" cy="${y1.toFixed(2)}" r="4" fill="#15171a" stroke="${color}" stroke-width="2"><title>Start: the value at rest (${mod.low})</title></circle>`;
-    svg += `<circle class="handle" data-mod="${mod.id}" data-end="high" cx="${x}" cy="${y2.toFixed(2)}" r="4" fill="${color}"><title>End: the value at full travel (${mod.high})</title></circle>`;
+    svg += handleSvg(mod, "low", x, y1, color, `Start: the value at rest (${mod.low})`);
+    svg += handleSvg(mod, "high", x, y2, color, `End: the value at full travel (${mod.high})`);
   }
   return svg + "</g>";
 }
@@ -152,9 +161,17 @@ function drawbarSvg(target: Target): string {
   return svg + "</svg>";
 }
 
+const PAUSED_TEXT = "Address version, switched off while the CC version is tried by ear";
+
+// A parameter address can be refused outright; a CC cannot be read back, so it was only heard to do nothing.
+function failureText(target: Target): string {
+  return target.kind === "cc" ? "Heard no effect on this unit" : "This unit refuses writes to this address";
+}
+
 function statusBadge(target: Target): string {
-  if (target.status === "unavailable") return '<span class="badge bad" title="This unit refuses writes to this address">✕</span>';
-  if (target.status === "documented") return '<span class="badge" title="A CC: it cannot be read back, judge it by ear">CC</span>';
+  if (isPaused(target)) return `<span class="badge" title="${PAUSED_TEXT}">off</span>`;
+  if (target.status === "unavailable") return `<span class="badge bad" title="${failureText(target)}">✕</span>`;
+  if (target.status === "documented") return '<span class="badge" title="A CC nobody has judged by ear yet: tools/test_ccs.py asks about it">untested</span>';
   return "";
 }
 
@@ -166,7 +183,7 @@ function widgetHtml(widget: Widget): string {
   const target = ctx.targets[widget.id];
   if (!target) return "";
   const classes = ["dest", widget.kind, isAvailable(target) ? "" : "unavailable"].join(" ");
-  const title = `${target.label}${target.status === "unavailable" ? " (refused by this unit)" : ""}`;
+  const title = `${target.label}${target.status === "unavailable" ? ` (${failureText(target).toLowerCase()})` : ""}${isPaused(target) ? ` (${PAUSED_TEXT})` : ""}`;
   return `<div class="${classes}" data-target="${target.id}" data-kind="${widget.kind}" title="${escapeHtml(title)}">
     <div class="art">${widgetSvg(target, widget.kind)}</div>
     <div class="label">${escapeHtml(widget.short)}${statusBadge(target)}</div></div>`;
@@ -226,13 +243,14 @@ export function updateMeter(axis: number): void {
 // ---------- modulations table ----------
 
 function targetOptions(selected: string): string {
-  const groups: [string, string][] = [["verified", "Verified on the unit"], ["recalled", "Changes with a recall"], ["documented", "CC, judge by ear"], ["unavailable", "Refused by this unit"]];
+  const groups: [string, string][] = [["verified", "Verified on the unit"], ["recalled", "Changes with a recall"], ["documented", "CC, not judged yet"], ["unavailable", "Refused, or no effect heard"]];
   let html = "";
   for (const [status, label] of groups) {
+    if (!ctx.targetOrder.some((id) => ctx.targets[id].status === status)) continue;
     html += `<optgroup label="${label}">`;
     for (const id of ctx.targetOrder) {
       const target = ctx.targets[id];
-      if (target.status === status) html += `<option value="${id}" ${id === selected ? "selected" : ""}>${escapeHtml(target.label)}</option>`;
+      if (target.status === status) html += `<option value="${id}" ${id === selected ? "selected" : ""} ${isPaused(target) && id !== selected ? "disabled" : ""}>${escapeHtml(target.label)}${isPaused(target) ? " (off for now)" : ""}</option>`;
     }
     html += "</optgroup>";
   }
@@ -274,7 +292,7 @@ export function transferSvg(mod: Mod): string {
 function modRowHtml(mod: Mod): string {
   const target = ctx.targets[mod.target];
   const live = ctx.liveOut.get(mod.id);
-  const warn = target && !isAvailable(target) ? ' <span class="badge bad" title="This unit refuses writes to this address">✕</span>' : "";
+  const warn = isPaused(target) ? ` <span class="badge" title="${PAUSED_TEXT}">off</span>` : target && !isAvailable(target) ? ` <span class="badge bad" title="${failureText(target)}">✕</span>` : "";
   return `<tr data-mod="${mod.id}" class="${ctx.selected === mod.id ? "selected" : ""}" style="--axis-color:${AXIS_COLORS[mod.axis]}">
     <td><span class="dot"></span><select data-field="axis">${axisOptions(mod.axis)}</select></td>
     <td><select data-field="target">${targetOptions(mod.target)}</select>${warn}</td>

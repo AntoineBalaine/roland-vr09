@@ -18,75 +18,50 @@
  {
   "name": "organ-gospel-swell",
   "patch_type": "organ",
-  "summary": "Body swells the low drawbars together; tone drives overdrive and brightness; effects add leakage.",
-  "status": "partly working: eq-high are unavailable on this unit",
+  "summary": "Body swells the low drawbars together; tone drives overdrive and brightness; effects add leakage. Reworked after listening tests: eq-high -> tweeter-fast.",
+  "status": "every target verified",
   "dead_axes": [],
-  "unavailable_targets": [
-   "eq-high"
-  ]
+  "unavailable_targets": []
  },
  {
   "name": "organ-jazz-percussive",
   "patch_type": "organ",
-  "summary": "A clean, percussive jazz sound: click and the 4' drawbar come in with the tone axis.",
-  "status": "needs rework: no working target on axis CC19",
-  "dead_axes": [
-   19
-  ],
-  "unavailable_targets": [
-   "eq-high"
-  ]
+  "summary": "A clean, percussive jazz sound: click and the 4' drawbar come in with the tone axis. Reworked after listening tests: eq-high -> leakage.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "organ-rock-grit",
   "patch_type": "organ",
-  "summary": "Overdrive and the dry mix move in opposite directions so the grit grows without losing the attack.",
-  "status": "needs rework: no working target on axis CC18",
-  "dead_axes": [
-   18
-  ],
-  "unavailable_targets": [
-   "eq-high",
-   "eq-low",
-   "overdrive-dry"
-  ]
+  "summary": "Overdrive and the dry mix move in opposite directions so the grit grows without losing the attack. Reworked after listening tests: overdrive-dry -> click-on; eq-high -> tweeter-fast; eq-low -> woofer-fast.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "organ-rotary-morph",
   "patch_type": "organ",
-  "summary": "All four axes shape the rotary speaker instead of the tone.",
-  "status": "needs rework: no working target on axis CC19",
-  "dead_axes": [
-   19
-  ],
-  "unavailable_targets": [
-   "rotary-brake"
-  ]
+  "summary": "All four axes shape the rotary speaker instead of the tone. Reworked after listening tests: axis CC19 -> overdrive.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "organ-click-and-air",
   "patch_type": "organ",
-  "summary": "Mechanical character of the organ: key clicks and leakage.",
-  "status": "needs rework: no working target on axis CC19",
-  "dead_axes": [
-   19
-  ],
-  "unavailable_targets": [
-   "eq-high"
-  ]
+  "summary": "Mechanical character of the organ: key clicks and leakage. Reworked after listening tests: eq-high -> tweeter-fast.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "organ-eq-tilt",
   "patch_type": "organ",
-  "summary": "Tone tilts the organ's EQ between dark and bright.",
-  "status": "needs rework: no working target on axis CC17",
-  "dead_axes": [
-   17
-  ],
-  "unavailable_targets": [
-   "eq-high",
-   "eq-low"
-  ]
+  "summary": "Tone tilts the organ's EQ between dark and bright. Reworked after listening tests: eq-high -> tweeter-fast; eq-low -> woofer-fast.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "organ-lower-swell",
@@ -99,273 +74,200 @@
  {
   "name": "organ-pipe-registration",
   "patch_type": "organ",
-  "summary": "A pipe-organ build-up: foundation fixed by the patch, mixtures come in over the tone axis.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "A pipe-organ build-up: foundation fixed by the patch, mixtures come in over the tone axis. Reworked after listening tests: cc-upper-reverb -> click-on.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "organ-ballad-warm",
   "patch_type": "organ",
-  "summary": "A warm ballad sound: the tone axis darkens the EQ while the low drawbars rise.",
-  "status": "partly working: eq-high are unavailable on this unit",
+  "summary": "A warm ballad sound: the tone axis darkens the EQ while the low drawbars rise. Reworked after listening tests: eq-high -> leakage; cc-upper-reverb -> click-on.",
+  "status": "every target verified",
   "dead_axes": [],
-  "unavailable_targets": [
-   "eq-high"
-  ]
+  "unavailable_targets": []
  },
  {
   "name": "organ-dynamic-volume",
   "patch_type": "organ",
-  "summary": "The body axis is an organ volume pedal.",
-  "status": "needs rework: no working target on axis CC17",
-  "dead_axes": [
-   17
-  ],
-  "unavailable_targets": [
-   "eq-high"
-  ]
+  "summary": "The body axis is an organ volume pedal. Reworked after listening tests: eq-high -> leakage.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "synth-lead-expressive",
   "patch_type": "synth lead",
-  "summary": "Cutoff and resonance open together; vibrato grows with the modulation axis.",
-  "status": "partly working: upper-synth-cutoff are unavailable on this unit",
+  "summary": "Cutoff and resonance open together; vibrato grows with the modulation axis. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
   "dead_axes": [],
-  "unavailable_targets": [
-   "upper-synth-cutoff"
-  ]
+  "unavailable_targets": []
  },
  {
   "name": "synth-lead-bite",
   "patch_type": "synth lead",
-  "summary": "A biting lead: resonance on the body axis, cutoff on the tone axis.",
-  "status": "needs rework: no working target on axis CC17, CC18",
-  "dead_axes": [
-   17,
-   18
-  ],
-  "unavailable_targets": [
-   "upper-synth-cutoff",
-   "upper-synth-portamento"
-  ]
+  "summary": "A biting lead: resonance on the body axis, cutoff on the tone axis. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; upper-synth-portamento -> cc-upper-release.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "synth-lead-solo-glide",
   "patch_type": "synth lead",
-  "summary": "For a mono lead with portamento on: glide time and vibrato are under the fingers.",
-  "status": "needs rework: no working target on axis CC16, CC17",
-  "dead_axes": [
-   16,
-   17
-  ],
-  "unavailable_targets": [
-   "upper-synth-cutoff",
-   "upper-synth-portamento"
-  ]
+  "summary": "For a mono lead with portamento on: glide time and vibrato are under the fingers. Reworked after listening tests: upper-synth-portamento -> cc-upper-release; upper-synth-cutoff -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "synth-pad-evolve",
   "patch_type": "synth pad",
-  "summary": "A slow pad: attack and cutoff evolve; the effects axis opens reverb and release.",
-  "status": "needs rework: no working target on axis CC17",
-  "dead_axes": [
-   17
-  ],
-  "unavailable_targets": [
-   "upper-synth-cutoff"
-  ]
+  "summary": "A slow pad: attack and cutoff evolve; the effects axis opens reverb and release. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "synth-pad-breath",
   "patch_type": "synth pad",
-  "summary": "Breathing pad: envelope times on the body and effects axes, filter movement on the tone axis.",
-  "status": "needs rework: no working target on axis CC17",
-  "dead_axes": [
-   17
-  ],
-  "unavailable_targets": [
-   "upper-synth-cutoff"
-  ]
+  "summary": "Breathing pad: envelope times on the body and effects axes, filter movement on the tone axis. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "synth-pad-ambient",
   "patch_type": "synth pad",
-  "summary": "Wide and washed: effects dominate.",
-  "status": "needs rework: no working target on axis CC17",
-  "dead_axes": [
-   17
-  ],
-  "unavailable_targets": [
-   "upper-synth-cutoff"
-  ]
+  "summary": "Wide and washed: effects dominate. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "synth-bass-punch",
   "patch_type": "synth bass",
-  "summary": "A punchy bass: cutoff and resonance on tone, decay on body.",
-  "status": "needs rework: no working target on axis CC18",
-  "dead_axes": [
-   18
-  ],
-  "unavailable_targets": [
-   "upper-synth-cutoff",
-   "upper-synth-portamento"
-  ]
+  "summary": "A punchy bass: cutoff and resonance on tone, decay on body. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; upper-synth-portamento -> cc-upper-release.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "synth-bass-growl",
   "patch_type": "synth bass",
-  "summary": "Resonance does the growling; attack is shortened as the tone opens.",
-  "status": "partly working: upper-synth-cutoff are unavailable on this unit",
+  "summary": "Resonance does the growling; attack is shortened as the tone opens. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff.",
+  "status": "every target verified",
   "dead_axes": [],
-  "unavailable_targets": [
-   "upper-synth-cutoff"
-  ]
+  "unavailable_targets": []
  },
  {
   "name": "synth-brass-swell",
   "patch_type": "synth brass",
-  "summary": "A brass swell: attack lengthens while the filter opens.",
-  "status": "needs rework: no working target on axis CC17",
-  "dead_axes": [
-   17
-  ],
-  "unavailable_targets": [
-   "upper-synth-cutoff"
-  ]
+  "summary": "A brass swell: attack lengthens while the filter opens. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "synth-strings-ensemble",
   "patch_type": "synth strings",
-  "summary": "String sections: slow attack, chorus on the effects axis, vibrato on the modulation axis.",
-  "status": "needs rework: no working target on axis CC17",
-  "dead_axes": [
-   17
-  ],
-  "unavailable_targets": [
-   "upper-synth-cutoff"
-  ]
+  "summary": "String sections: slow attack, chorus on the effects axis, vibrato on the modulation axis. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "synth-keys-electric",
   "patch_type": "synth keys",
-  "summary": "Electric-piano-like synth keys: decay on body, tremolo-ish vibrato, reverb.",
-  "status": "needs rework: no working target on axis CC17",
-  "dead_axes": [
-   17
-  ],
-  "unavailable_targets": [
-   "upper-synth-cutoff"
-  ]
+  "summary": "Electric-piano-like synth keys: decay on body, tremolo-ish vibrato, reverb. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "synth-pluck",
   "patch_type": "synth pluck",
-  "summary": "Plucked sounds: decay and release are short and shaped together.",
-  "status": "needs rework: no working target on axis CC17",
-  "dead_axes": [
-   17
-  ],
-  "unavailable_targets": [
-   "upper-synth-cutoff"
-  ]
+  "summary": "Plucked sounds: decay and release are short and shaped together. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "synth-filter-only",
   "patch_type": "synth",
-  "summary": "The simplest synth template: cutoff, resonance, reverb and vibrato, one each.",
-  "status": "needs rework: no working target on axis CC17",
-  "dead_axes": [
-   17
-  ],
-  "unavailable_targets": [
-   "upper-synth-cutoff"
-  ]
+  "summary": "The simplest synth template: cutoff, resonance, reverb and vibrato, one each. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "synth-lower-layer",
   "patch_type": "synth",
-  "summary": "Same ideas as synth-filter-only, but on the lower synth part.",
-  "status": "needs rework: no working target on axis CC17",
-  "dead_axes": [
-   17
-  ],
-  "unavailable_targets": [
-   "lower-synth-cutoff"
-  ]
+  "summary": "Same ideas as synth-filter-only, but on the lower synth part. Reworked after listening tests: lower-synth-cutoff -> cc-lower-cutoff.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "piano-concert",
   "patch_type": "piano",
-  "summary": "A concert piano: expression on body, reverb on effects, chorus kept subtle.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "A concert piano: expression on body, reverb on effects, chorus kept subtle. Reworked after listening tests: cc-upper-pan -> cc-upper-cutoff; cc-piano-reverb -> cc-upper-expression.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "piano-ambient",
   "patch_type": "piano",
-  "summary": "A cinematic piano: reverb and chorus open together.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "A cinematic piano: reverb and chorus open together. Reworked after listening tests: cc-upper-pan -> cc-upper-cutoff; cc-piano-reverb -> cc-upper-expression.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "piano-ep-chorus",
   "patch_type": "electric piano",
-  "summary": "An electric piano with chorus on the tone axis.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "An electric piano with chorus on the tone axis. Reworked after listening tests: cc-piano-reverb -> cc-upper-expression.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "piano-intimate",
   "patch_type": "piano",
-  "summary": "A dry, close piano: almost no effects, just expression and a little width.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "A dry, close piano: almost no effects, just expression and a little width. Reworked after listening tests: cc-piano-reverb -> cc-upper-expression; cc-upper-pan -> cc-upper-cutoff.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "xfade-piano-synth",
   "patch_type": "layer",
-  "summary": "Crossfade the upper piano into the upper synth.",
-  "status": "needs rework: no working target on axis CC18",
-  "dead_axes": [
-   18
-  ],
-  "unavailable_targets": [
-   "upper-synth-cutoff"
-  ]
+  "summary": "Crossfade the upper piano into the upper synth. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "xfade-upper-lower",
   "patch_type": "layer",
-  "summary": "Crossfade between the upper and lower synth parts.",
-  "status": "needs rework: no working target on axis CC18, CC19",
-  "dead_axes": [
-   18,
-   19
-  ],
-  "unavailable_targets": [
-   "lower-synth-cutoff",
-   "upper-synth-cutoff"
-  ]
+  "summary": "Crossfade between the upper and lower synth parts. Reworked after listening tests: upper-synth-cutoff -> cc-upper-cutoff; lower-synth-cutoff -> cc-lower-cutoff.",
+  "status": "every target verified",
+  "dead_axes": [],
+  "unavailable_targets": []
  },
  {
   "name": "xfade-organ-synth",
   "patch_type": "layer",
-  "summary": "Crossfade the organ into the upper synth.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "Crossfade the organ into the upper synth. Reworked after listening tests: cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "xfade-piano-organ",
   "patch_type": "layer",
-  "summary": "Crossfade the upper piano into the organ.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "Crossfade the upper piano into the organ. Reworked after listening tests: axis CC19 -> cc-upper-resonance.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
@@ -373,7 +275,7 @@
   "name": "section-synth-layers",
   "patch_type": "synth layers",
   "summary": "Upper synth and its dual 2 layer: body swells the main layer, tone opens the cutoff, modulation raises the resonance, effects blend in the second layer.",
-  "status": "every address verified; CC targets need listening",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
@@ -381,7 +283,7 @@
   "name": "section-synth",
   "patch_type": "synth",
   "summary": "One upper synth: body swells it, tone opens the cutoff, effects raise the resonance.",
-  "status": "every address verified; CC targets need listening",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
@@ -389,31 +291,31 @@
   "name": "section-synth-split",
   "patch_type": "synth split",
   "summary": "Upper synth over a lower synth: body swells the upper part, tone opens its cutoff, modulation and effects play the lower part.",
-  "status": "every address verified; CC targets need listening",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "section-piano",
   "patch_type": "piano",
-  "summary": "One upper piano: body swells it; the other axes are the Upper channel's CCs, which need listening.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "One upper piano: body swells it; the other axes are the Upper channel's CCs, which need listening. Reworked after listening tests: cc-upper-pan -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "section-piano-split",
   "patch_type": "piano split",
-  "summary": "Upper piano over a lower synth: body swells the piano, tone and modulation play the lower synth.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "Upper piano over a lower synth: body swells the piano, tone and modulation play the lower synth. Reworked after listening tests: cc-upper-reverb -> cc-upper-cutoff.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "section-piano-layer",
   "patch_type": "piano layer",
-  "summary": "Upper piano with a synth dual 2 layer: body swells the piano, tone blends in the synth layer.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "Upper piano with a synth dual 2 layer: body swells the piano, tone blends in the synth layer. Reworked after listening tests: cc-upper-reverb -> cc-upper-cutoff.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
@@ -429,47 +331,47 @@
   "name": "tone-synth-test-a",
   "patch_type": "single tone",
   "summary": "Test set A for one synth tone: expression, cutoff, vibrato depth and resonance, all as CCs.",
-  "status": "every address verified; CC targets need listening",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "tone-synth-test-b",
   "patch_type": "single tone",
-  "summary": "Test set B for one synth tone: part volume and resonance by address, modulation wheel and reverb.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "Test set B for one synth tone: part volume and resonance by address, modulation wheel and reverb. Reworked after listening tests: cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "tone-synth-test-c",
   "patch_type": "single tone",
-  "summary": "Test set C for one synth tone: chorus, pan, vibrato rate and attack, all as CCs.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "Test set C for one synth tone: chorus, pan, vibrato rate and attack, all as CCs. Reworked after listening tests: cc-upper-pan -> cc-upper-modulation.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "tone-piano-test",
   "patch_type": "single tone",
-  "summary": "Test set for one piano tone: part volume, cutoff, chorus and reverb.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "Test set for one piano tone: part volume, cutoff, chorus and reverb. Reworked after listening tests: cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "perform-expression-reverb",
   "patch_type": "any",
-  "summary": "A neutral performance template: overall volume, reverb and chorus sends.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "A neutral performance template: overall volume, reverb and chorus sends. Reworked after listening tests: cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  },
  {
   "name": "perform-width",
   "patch_type": "any",
-  "summary": "Stereo width: pan and chorus on the sides, reverb at the back.",
-  "status": "every address verified; CC targets need listening",
+  "summary": "Stereo width: pan and chorus on the sides, reverb at the back. Reworked after listening tests: cc-upper-pan -> cc-upper-vibrato-rate; cc-upper-reverb -> cc-upper-resonance.",
+  "status": "every target verified",
   "dead_axes": [],
   "unavailable_targets": []
  }

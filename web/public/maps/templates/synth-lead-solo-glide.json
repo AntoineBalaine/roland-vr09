@@ -1,17 +1,17 @@
 {
  "name": "synth-lead-solo-glide",
  "patch_type": "synth lead",
- "summary": "For a mono lead with portamento on: glide time and vibrato are under the fingers.",
- "status": "needs rework: no working target on axis CC16, CC17",
+ "summary": "For a mono lead with portamento on: glide time and vibrato are under the fingers. Reworked after listening tests: upper-synth-portamento -> cc-upper-release; upper-synth-cutoff -> cc-upper-cutoff; cc-upper-reverb -> cc-upper-resonance.",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
    "role": "body",
    "targets": [
     {
-     "target": "upper-synth-portamento",
-     "low": 0,
-     "high": 100,
+     "target": "cc-upper-release",
+     "low": 64,
+     "high": 110,
      "window": [
       0,
       127
@@ -25,8 +25,8 @@
    "role": "tone",
    "targets": [
     {
-     "target": "upper-synth-cutoff",
-     "low": 40,
+     "target": "cc-upper-cutoff",
+     "low": 30,
      "high": 127,
      "window": [
       0,
@@ -57,9 +57,9 @@
    "role": "effects",
    "targets": [
     {
-     "target": "cc-upper-reverb",
-     "low": 10,
-     "high": 90,
+     "target": "cc-upper-resonance",
+     "low": 64,
+     "high": 105,
      "window": [
       0,
       127
@@ -69,16 +69,7 @@
    ]
   }
  ],
- "unavailable_targets": [
-  "upper-synth-cutoff",
-  "upper-synth-portamento"
- ],
- "untested_targets": [
-  "cc-upper-reverb",
-  "cc-upper-vibrato-depth"
- ],
- "dead_axes": [
-  16,
-  17
- ]
+ "unavailable_targets": [],
+ "untested_targets": [],
+ "dead_axes": []
 }

@@ -1,8 +1,8 @@
 {
  "name": "tone-synth-test-b",
  "patch_type": "single tone",
- "summary": "Test set B for one synth tone: part volume and resonance by address, modulation wheel and reverb.",
- "status": "every address verified; CC targets need listening",
+ "summary": "Test set B for one synth tone: part volume and resonance by address, modulation wheel and reverb. Reworked after listening tests: cc-upper-reverb -> cc-upper-resonance.",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -57,9 +57,9 @@
    "role": "effects",
    "targets": [
     {
-     "target": "cc-upper-reverb",
-     "low": 0,
-     "high": 127,
+     "target": "cc-upper-resonance",
+     "low": 64,
+     "high": 105,
      "window": [
       0,
       127
@@ -70,9 +70,6 @@
   }
  ],
  "unavailable_targets": [],
- "untested_targets": [
-  "cc-upper-modulation",
-  "cc-upper-reverb"
- ],
+ "untested_targets": [],
  "dead_axes": []
 }
