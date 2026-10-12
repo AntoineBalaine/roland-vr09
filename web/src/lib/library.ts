@@ -382,7 +382,23 @@ function readTemplates(): TemplateInfo[] {
   const file = path.join(process.cwd(), "public", "maps", "index.json");
   if (!fs.existsSync(file)) return [];
   const index = JSON.parse(fs.readFileSync(file, "utf8")) as Partial<TemplateInfo>[];
-  return index.map((t) => ({ name: String(t.name), patch_type: String(t.patch_type ?? ""), status: String(t.status ?? ""), dead_axes: t.dead_axes ?? [] }));
+  const templates = index.map((t) => ({ name: String(t.name), patch_type: String(t.patch_type ?? ""), status: String(t.status ?? ""), dead_axes: t.dead_axes ?? [] }));
+  return withSavedMappings(templates);
+}
+
+// Because the mappings saved from the editor page take the place of the templates of the same name, the pairings
+// list them too: a template saved over is marked, and a mapping saved under a new name is added.
+function withSavedMappings(templates: TemplateInfo[]): TemplateInfo[] {
+  const known = new Set<string>();
+  for (const t of templates) known.add(t.name);
+  for (const info of listMappings()) {
+    if (info.source === "saved over a template") {
+      for (const t of templates) if (t.name === info.name) t.status = "edited in the mapping editor";
+    } else if (info.source === "saved" && !known.has(info.name)) {
+      templates.push({ name: info.name, patch_type: info.patch_type, status: "saved from the mapping editor", dead_axes: [] });
+    }
+  }
+  return templates;
 }
 
 // The first address of each part block and the offsets inside it: 00 mute (0 means it sounds), 01 tone number, 02 and 03 bank bytes.
@@ -541,3 +557,154 @@ export const getToneRecall = (request: Request): Promise<Response> =>
     messages.push(dt1Message(base.address, [tone.tone_number, tone.bank_msb, tone.bank_lsb]));
     return json(200, { tone, base: base.key, messages });
   });
+
+// Mappings ---------------------------------------------------------------------------------------
+// A mapping says what each Touché axis drives on the VR-09. The generated templates live in web/public/maps and
+// are rewritten by tools/make_templates.py, so the mappings edited in the editor page are saved apart, in
+// library/mappings. A saved mapping with the name of a template takes its place everywhere (editor, bridge page,
+// pairings), and the template file itself is never changed.
+
+const MAPPINGS = path.join(LIBRARY, "mappings");
+const TEMPLATES = path.join(process.cwd(), "public", "maps", "templates");
+const CURVES = ["linear", "soft", "hard"];
+
+export interface MappingTarget {
+  target: string;
+  low: number;
+  high: number;
+  window: [number, number];
+  curve: string;
+}
+export interface MappingAxis {
+  axis: number;
+  role?: string;
+  targets: MappingTarget[];
+}
+export interface Mapping {
+  name: string;
+  patch_type?: string;
+  summary?: string;
+  axes: MappingAxis[];
+}
+export interface MappingInfo {
+  name: string;
+  source: "template" | "saved" | "saved over a template";
+  patch_type: string;
+  summary: string;
+}
+
+function mappingFile(name: string): string {
+  return path.join(MAPPINGS, `${name}.json`);
+}
+
+function templateFile(name: string): string {
+  return path.join(TEMPLATES, `${name}.json`);
+}
+
+function checkMappingName(name: string): string {
+  if (!name || safe(name) !== name) throw new HttpError(400, "a mapping name may only hold letters, digits, - and _");
+  return name;
+}
+
+function readJsonFile(file: string): Mapping {
+  return JSON.parse(fs.readFileSync(file, "utf8")) as Mapping;
+}
+
+function infoOf(mapping: Mapping, source: MappingInfo["source"]): MappingInfo {
+  return { name: mapping.name, source, patch_type: String(mapping.patch_type ?? ""), summary: String(mapping.summary ?? "") };
+}
+
+function jsonNames(folder: string): string[] {
+  if (!fs.existsSync(folder)) return [];
+  const names: string[] = [];
+  for (const file of fs.readdirSync(folder)) if (file.endsWith(".json")) names.push(file.slice(0, -5));
+  return names.sort();
+}
+
+export function listMappings(): MappingInfo[] {
+  const saved = new Set(jsonNames(MAPPINGS));
+  const list: MappingInfo[] = [];
+  for (const name of jsonNames(TEMPLATES)) {
+    if (saved.has(name)) list.push(infoOf(readJsonFile(mappingFile(name)), "saved over a template"));
+    else list.push(infoOf(readJsonFile(templateFile(name)), "template"));
+  }
+  const templates = new Set(jsonNames(TEMPLATES));
+  for (const name of saved) if (!templates.has(name)) list.push(infoOf(readJsonFile(mappingFile(name)), "saved"));
+  return list;
+}
+
+export function readMapping(name: string): Mapping {
+  checkMappingName(name);
+  if (fs.existsSync(mappingFile(name))) return readJsonFile(mappingFile(name));
+  if (fs.existsSync(templateFile(name))) return readJsonFile(templateFile(name));
+  throw new HttpError(404, `no mapping named '${name}'`);
+}
+
+function checkNumber(value: unknown, what: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) throw new HttpError(400, `${what} must be a number`);
+  return value;
+}
+
+// Because a saved mapping is used live by the bridge, it is checked field by field before it is written.
+function checkMapping(body: unknown): Mapping {
+  const raw = body as Partial<Mapping>;
+  const name = checkMappingName(String(raw?.name ?? ""));
+  if (!Array.isArray(raw.axes)) throw new HttpError(400, "axes must be a list");
+  const axes: MappingAxis[] = [];
+  for (const axis of raw.axes) {
+    const number = checkNumber(axis.axis, "axis");
+    if (![16, 17, 18, 19].includes(number)) throw new HttpError(400, `unknown axis CC${number}`);
+    if (!Array.isArray(axis.targets)) throw new HttpError(400, `the targets of CC${number} must be a list`);
+    const targets: MappingTarget[] = [];
+    for (const t of axis.targets) {
+      if (typeof t.target !== "string" || !t.target) throw new HttpError(400, "every target needs an id");
+      if (!Array.isArray(t.window) || t.window.length !== 2) throw new HttpError(400, `the window of ${t.target} must be two numbers`);
+      const curve = String(t.curve ?? "linear");
+      if (!CURVES.includes(curve)) throw new HttpError(400, `unknown curve '${curve}'`);
+      targets.push({
+        target: t.target,
+        low: checkNumber(t.low, "low"),
+        high: checkNumber(t.high, "high"),
+        window: [checkNumber(t.window[0], "window start"), checkNumber(t.window[1], "window end")],
+        curve,
+      });
+    }
+    axes.push({ axis: number, role: axis.role ? String(axis.role) : undefined, targets });
+  }
+  return { name, patch_type: raw.patch_type ? String(raw.patch_type) : undefined, summary: raw.summary ? String(raw.summary) : undefined, axes };
+}
+
+function saveMapping(body: unknown): Mapping {
+  const mapping = checkMapping(body);
+  fs.mkdirSync(MAPPINGS, { recursive: true });
+  writeAtomically(mappingFile(mapping.name), JSON.stringify(mapping, null, 1) + "\n");
+  return mapping;
+}
+
+function mappingListResponse(request: Request): Response {
+  checkLocal(request);
+  return json(200, { mappings: listMappings() });
+}
+
+function mappingReadResponse(request: Request): Response {
+  checkLocal(request);
+  return json(200, readMapping(new URL(request.url).searchParams.get("name") ?? ""));
+}
+
+async function mappingWriteResponse(request: Request): Promise<Response> {
+  checkWrite(request, false);
+  const mapping = saveMapping(await request.json());
+  return json(200, { mapping, mappings: listMappings() });
+}
+
+export function getMappings(request: Request): Promise<Response> {
+  return respond(mappingListResponse.bind(null, request));
+}
+
+export function getMapping(request: Request): Promise<Response> {
+  return respond(mappingReadResponse.bind(null, request));
+}
+
+export function postMapping(request: Request): Promise<Response> {
+  return respond(mappingWriteResponse.bind(null, request));
+}

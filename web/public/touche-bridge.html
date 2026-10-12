@@ -412,7 +412,7 @@ async function onTemplateLoad() {
   const name = $("template-list").value;
   if (!name) return;
   try {
-    const loaded = await (await fetch(`maps/templates/${name}.json`)).json();
+    const loaded = await (await fetch(`/api/mapping?name=${encodeURIComponent(name)}`)).json();
     ctx.preset = { name: loaded.name, axes: loaded.axes };
     $("preset-name").value = loaded.name;
     renderAxes();
@@ -1290,7 +1290,7 @@ function onSceneFilter() {
 }
 
 async function loadMapping(template) {
-  const loaded = await (await fetch(`maps/templates/${template}.json`)).json();
+  const loaded = await (await fetch(`/api/mapping?name=${encodeURIComponent(template)}`)).json();
   ctx.preset = { name: loaded.name, axes: loaded.axes };
   $("preset-name").value = loaded.name;
   renderAxes();
@@ -1406,7 +1406,7 @@ async function loadTones() {
   $("tone-group").innerHTML = optionsHtml(groups, groups, preferred);
   for (const info of ctx.scenes.templates) {
     if (info.patch_type !== "single tone") continue;
-    try { ctx.toneTemplates[info.name] = await (await fetch(`maps/templates/${info.name}.json`)).json(); } catch (error) { /* the option then shows the bare name */ }
+    try { ctx.toneTemplates[info.name] = await (await fetch(`/api/mapping?name=${encodeURIComponent(info.name)}`)).json(); } catch (error) { /* the option then shows the bare name */ }
   }
   fillToneMappings();
   renderTones();
