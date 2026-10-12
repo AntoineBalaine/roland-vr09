@@ -236,10 +236,41 @@ and the write leaves the value at 0.
   at all; the unit does not say.
 - The neighbouring synth parameters (resonance, attack, decay, release) do take writes, so this is not a
   property of the part block. Whether those accepted writes are also audible has not been checked by ear.
-- The synth filter cutoff is therefore not reachable through DT1. The documented alternative is CC74 on the
-  part's channel, which changes no stored parameter and can only be judged by listening.
+- The synth filter cutoff is therefore not reachable through DT1. CC74 on the part's channel reaches it, see
+  "CC controls on the keyboard part, heard".
 - Results are in `library/target-tests.json`; `tools/make_templates.py` folds them into the statuses of
   `web/public/maps/targets.json`.
+
+## CC controls on the keyboard part, heard
+
+A CC changes no stored parameter and cannot be read back, so each one was judged by ear with `tools/test_ccs.py`
+(2026-10-12): it sets up a sound, plays a chord, moves the CC from its lowest to its highest value and back, and
+asks. Probing CC71 to CC75 on channel 4 while reading `01 03 59` to `01 03 5C` showed the stored bytes unchanged.
+The answers are in `library/target-tests.json`.
+
+| Part (channel) | Heard working | Heard to do nothing |
+|---|---|---|
+| Upper (4) | CC11 expression, CC74 cutoff, CC71 resonance, CC73 attack, CC72 release, CC75 decay, CC77 vibrato depth, CC76 vibrato rate, CC1 modulation, CC93 chorus send | CC91 reverb send, CC10 pan |
+| Lower (3) | CC74 cutoff, CC11 expression, CC91 reverb send, CC93 chorus send | none; CC71 to CC73, CC75 to CC77 and CC1 are untested |
+| Second piano layer (1) | CC11 expression, CC93 chorus send | CC91 reverb send |
+| Control (16) | CC11 overall volume | none |
+
+- Roland's document is not a reliable guide here. Its chart lists CC71 to CC77 as "received in GM2 mode" and
+  CC10, CC11, CC91 and CC93 as "not received in the keyboard part"; only CC71 to CC73 carry the tag for the keyboard
+  part in the message descriptions. The unit nevertheless obeys CC74 to CC77 and CC93 on the keyboard part, and
+  CC11 on channel 4 as well as on channel 16.
+- The reverb verdicts may depend on the sound: reverb was on in the three test patches (types 2 and 5, levels 16 to
+  25), the lower part answered, the upper part and the second piano layer did not. The upper reverb was heard on
+  Super Saw Ld only.
+- Envelope controls (attack, decay, release) and the reverb send only show at the start and end of notes, so the
+  test plays repeated or stepped chords. The chorus send was judged on a plain saw (Saw Lead 1), because a supersaw
+  already beats like a chorus, and the decay on a plucked string (Steel-str.Gt).
+- Whether the address versions of resonance, attack, decay and release (`01 03 59` to `01 03 5C`, accepted and
+  read back) and their CC versions act on the same value or stack has not been tried by ear.
+- Expression (CC11) is documented as a volume of the part that is independent of the part volume (`01 03 04`);
+  whether it leaves that stored byte alone was not probed. A CC keeps its value until another one arrives, so a
+  mapping that leaves expression low keeps the keyboard almost mute; the bridge page resets the controllers
+  before every load.
 
 ## Write rules for DT1
 
@@ -342,10 +373,12 @@ parameter was not tested alone.
 | Play drums from your own sequencer and clock | Verified | notes on channel 11 (`9A` note on, `8A` note off) sound while a chord is held on the keyboard, see Drums with a sequencer; the kit and its level were not tested |
 | Rhythm and song volume | Documented address | `00 00 25` (rhythm level), `00 00 23` (song level) |
 | Compressor and tone level | Documented address | `00 00 62` (compressor level), `00 00 61` (tone level) |
-| Overall volume | Documented | CC11 on channel 16, like the expression pedal |
-| Per-part volume and pan | Documented | CC7, CC10 |
-| Reverb and chorus send per part | Documented | CC91, CC93 |
-| Synth sound shaping | Documented | CC71 to CC77 (resonance, release, attack, cutoff, decay, vibrato rate and depth) |
+| Overall volume | Verified by ear | CC11 on channel 16, like the expression pedal |
+| Per-part volume | Verified by address, expression by ear | DT1 `01 03 04` (upper synth) and its neighbours; CC11 on channels 4, 3 and 1 |
+| Pan | Heard to do nothing on the upper part | CC10 on channel 4; not tried elsewhere |
+| Reverb send per part | Verified by ear on the lower part only | CC91 does nothing on the upper part and the second piano layer |
+| Chorus send per part | Verified by ear | CC93 on the upper part, the lower part and the second piano layer |
+| Synth sound shaping | Verified by ear on the upper part | CC71 to CC77 and CC1; on the lower part only CC74 so far; the cutoff address is refused |
 | Sustain, sostenuto, soft pedal, pitch bend | Documented | CC64, CC66, CC67, pitch bend |
 | What each footswitch does | Documented address | `00 00 4F` and `00 00 50` |
 | GM2 sounds on the other channels | Documented | Program Change and Bank Select work there, on channels 5 to 10, 12, 14 and 15 |

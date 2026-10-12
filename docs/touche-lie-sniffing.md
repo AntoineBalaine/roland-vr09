@@ -181,7 +181,7 @@ meaningful unit is the 13 layouts, not the 146 presets.
   patch presets (22). The Roland CC names follow the same convention as the VR-09's documented
   CCs (CC71 to CC77), which is why the Integra-7 template is the closest vocabulary match.
 
-### Remap templates for the VR-09 (generated, untested)
+### Remap templates for the VR-09 (generated)
 
 `tools/make_templates.py` writes `web/public/maps/`: `targets.json` (66 VR-09 targets),
 `templates/*.json` (36 templates) and `index.json`.
@@ -204,8 +204,15 @@ meaningful unit is the 13 layouts, not the 146 presets.
   4 are partly working, and 20 have an axis with no working target (mostly the synth cutoff on CC17), so
   they need rework. The generator reports this in `index.json`, and the bridge page marks those templates
   and skips writes to unavailable targets.
+- Update, 2026-10-12: all CC targets were heard with `tools/test_ccs.py` (see "CC controls on the keyboard part,
+  heard" in `midi-capabilities.md`). The catalog now has 73 targets and 47 templates: the first 36, 7 `section-*`
+  templates built on the sections that sound in a registration, and 4 `tone-*` test sets. Three CCs were heard
+  to do nothing (upper reverb, upper pan, piano reverb), so `make_templates.py` replaces every target that
+  does not work by the nearest one that does, per family (organ, piano, synth), and notes the swap in the summary
+  of the template. All 47 templates use only controls that were heard working. The replacements are mechanical,
+  not designed: see the open items below.
 
-### The bridge page (written, not yet run on the unit)
+### The bridge page and the mapping editor
 
 `web/public/touche-bridge.html` is served by the Astro dev server at
 `http://localhost:8765/touche-bridge.html`. Web MIDI needs a secure context, which `localhost`
@@ -221,9 +228,27 @@ is; for an Android phone, run `adb reverse tcp:8765 tcp:8765` first.
 - The preset editor loads the templates, lets an axis drive several targets, and saves presets
   in the browser or as JSON. The bridge sends a message only when a quantised value changes, at
   most one every 5 ms.
-- It has not been run in a browser against the real Touché and VR-09. The VR-09 appeared
-  nowhere in this Mac's MIDI ports; it is on the Linux machine, where `vr09.py` must not hold
-  the port while the page runs.
+- Update, 2026-10-12: it runs against the real Touché and VR-09 on the Linux machine, where `vr09.py` and
+  `tools/test_ccs.py` must not hold the port while a page does. Since the first version it also has:
+  - a target test and a sweep, with the results kept in `library/target-tests.json` and the page's own
+    steps appended to `library/page-log.jsonl` (git-ignored) by the server;
+  - a Scenes table: each registration of the library paired with a mapping (the `touche` field of
+    `library/catalog.yaml`, edited in the Pairings tab of the library page); Load writes the registration over
+    Web MIDI, loads the mapping and starts the bridge, and Previous, Next and a filter step through the rows;
+  - Single tones: any tone of the tone list played alone on the upper synth or piano, with a mapping chosen
+    from the `tone-*` sets, and works or no effect buttons beside each axis of the monitor;
+  - a monitor beside the table showing, for each axis, the keyboard parameter it controls and the values sent;
+  - a reset of the controllers (CC121 and the neutral values) before every load.
+- The mapping editor is a separate page, `http://localhost:8765/touche` (the Touché tab of the library page opens it,
+  and its header links back to the bridge page as "Bridge test bench"): a keyboard panel with a ring per
+  modulation, drag and drop of a Touché axis onto a control, a table of modulations, saved mappings in
+  `library/mappings/`, and live writes to the keyboard. The address versions of the synth's shaping controls
+  are switched off there while the CC versions are tried (`PAUSED_ADDRESS_CONTROLS` in
+  `web/src/scripts/touche/state.ts`).
+- Firefox keeps showing a Touché input after the Touché is unplugged and plugged back in, but receives nothing
+  from it; restarting Firefox, or connecting the new port by hand with `aconnect`, repairs it.
+- The Touché's left and right buttons send CC80 and CC81 only in Slave mode (Lié running), which Linux does not
+  have. In standalone mode they change its own preset silently, so stepping scenes with them cannot work.
 
 ### Switching Lié presets from outside (found by reading Lié's code, not yet tested)
 
@@ -339,6 +364,27 @@ Two options, either works, pick whichever is more convenient at the time:
    Press the buttons again. See whether anything is sent at all with no software running — this
    answers the open question above about whether preset recall ever produces outgoing traffic we
    could key off of, or whether it's purely internal to the device.
+
+## Open items for the mapping tools
+
+- Seven lower-part CCs are in the catalog but untested: resonance, attack, decay, release, vibrato depth,
+  vibrato rate and modulation. `tools/test_ccs.py` asks only about them.
+- The reworked templates are mechanical. Several synth templates still put the attack or the resonance on the body
+  axis (CC16), where it only affects new notes and cannot give a swell. A redesign of the synth families around
+  expression, cutoff, vibrato and resonance is proposed, not done.
+- The address and CC versions of resonance, attack, decay and release may be the same value or may stack. Try
+  one tone with each version, then decide which to keep in the editor.
+- Upper reverb and piano reverb were heard to do nothing, on one sound each. They may work on another tone or with
+  a higher global reverb level; the lower reverb works.
+- Not in the catalog yet: part volume by CC7, portamento (CC5 time, CC65 on or off), pitch bend, and the
+  lower-part versions of pan.
+- The 70 registrations were paired with a mapping automatically, from the sections that sound. No pairing has
+  been reviewed by ear, and registrations with a drum kit or an organ over a synth were paired roughly.
+- Switching scenes from the Touché's own buttons is not possible in standalone mode (see above). The page's option
+  for it never fires there.
+- The scene switcher and the bridge are Python, JavaScript and Astro. Porting to a compiled language is for later.
+- Two untracked files wait for a decision: `dumps/1-9_FallerPno_DF.json` and `library/photos/1-4_PatternProDF.jpg`,
+  left over from patches renamed during the capture.
 
 ## Open questions this should answer
 
