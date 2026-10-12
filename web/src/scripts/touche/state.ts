@@ -166,7 +166,18 @@ export const ctx = {
   sentCount: 0,
   redraw: new Set<string>(),
   redrawScheduled: false,
-  drag: null as null | { mod: number; end: "low" | "high"; target: string; kind: "knob" | "drawbar"; svg: SVGSVGElement },
+  // A drag either moves the start or end handle of a modulation ("handle"), or sets a control's value on the
+  // keyboard ("value"); a knob's value follows the vertical movement from where the drag started.
+  drag: null as null | {
+    mode: "handle" | "value";
+    mod: number;
+    end: "low" | "high";
+    target: string;
+    kind: "knob" | "drawbar";
+    svg: SVGSVGElement;
+    startY: number;
+    startValue: number;
+  },
   modalResolve: null as null | ((answer: string) => void),
   busy: false,
   scenes: { order: [] as string[], titles: {} as Record<string, string>, pairings: {} as Record<string, string> },

@@ -70,6 +70,8 @@ function knobRing(mod: Mod, target: Target, index: number): string {
   const selected = ctx.selected === mod.id;
   const width = selected ? 3.6 : 2.6;
   let svg = `<g class="ring${selected ? " selected" : ""}" data-mod="${mod.id}"><title>${escapeHtml(ringTitle(mod, target))}</title>`;
+  // Because the visible ring is a thin stroke, a wider transparent one under it takes the clicks.
+  svg += `<path d="${arcPath(radius, from, to)}" stroke="transparent" stroke-width="9" fill="none" class="ring-hit" data-mod="${mod.id}"/>`;
   svg += `<path d="${arcPath(radius, from, to)}" stroke="${color}" stroke-width="${width}" fill="none" stroke-linecap="round" class="ring-arc" data-mod="${mod.id}"/>`;
   svg += arrowHead(radius, to, to >= from, color);
   const live = ctx.liveOut.get(mod.id);
@@ -95,7 +97,7 @@ function knobSvg(target: Target): string {
   if (stored !== undefined) {
     const [px, py] = polar(KNOB.body - 2, knobAngle(target, stored));
     const [qx, qy] = polar(4, knobAngle(target, stored));
-    svg += `<line x1="${qx.toFixed(2)}" y1="${qy.toFixed(2)}" x2="${px.toFixed(2)}" y2="${py.toFixed(2)}" class="pointer"><title>Stored value: ${stored}</title></line>`;
+    svg += `<line x1="${qx.toFixed(2)}" y1="${qy.toFixed(2)}" x2="${px.toFixed(2)}" y2="${py.toFixed(2)}" class="pointer"><title>${target.kind === "cc" ? "Last sent" : "Stored value"}: ${stored}</title></line>`;
   }
   for (let i = 0; i < Math.min(mods.length, MAX_RINGS); i++) svg += knobRing(mods[i], target, i);
   if (mods.length > MAX_RINGS) svg += `<text x="${KNOB.size - 4}" y="10" class="more" text-anchor="end">+${mods.length - MAX_RINGS}</text>`;
@@ -120,6 +122,7 @@ function drawbarLane(mod: Mod, target: Target, index: number): string {
   const y2 = drawbarY(target, mod.high);
   const selected = ctx.selected === mod.id;
   let svg = `<g class="ring${selected ? " selected" : ""}" data-mod="${mod.id}"><title>${escapeHtml(ringTitle(mod, target))}</title>`;
+  svg += `<line x1="${x}" y1="${y1.toFixed(2)}" x2="${x}" y2="${y2.toFixed(2)}" stroke="transparent" stroke-width="7" class="ring-hit" data-mod="${mod.id}"/>`;
   svg += `<line x1="${x}" y1="${y1.toFixed(2)}" x2="${x}" y2="${y2.toFixed(2)}" stroke="${color}" stroke-width="${selected ? 3.6 : 2.6}" stroke-linecap="round" class="ring-arc" data-mod="${mod.id}"/>`;
   const down = y2 >= y1;
   svg += `<path d="M ${x - 2.6} ${(y2 - (down ? 3 : -3)).toFixed(2)} L ${x + 2.6} ${(y2 - (down ? 3 : -3)).toFixed(2)} L ${x} ${(y2 + (down ? 1.5 : -1.5)).toFixed(2)} Z" fill="${color}" pointer-events="none"/>`;
@@ -321,7 +324,7 @@ export function renderSelection(): void {
   const mod = modById(ctx.selected);
   const box = document.getElementById("selection") as HTMLElement;
   if (!mod) {
-    box.innerHTML = '<span class="muted">Click a ring to select a modulation, then drag its start (hollow) or end (filled) handle. Delete removes it.</span>';
+    box.innerHTML = '<span class="muted">Drag a knob up or down, or pull a drawbar, to set it on the keyboard. Click a ring to select a modulation, then drag its start (hollow) or end (filled) handle; Alt-click a ring, or press Delete, to remove it.</span>';
     return;
   }
   const target = ctx.targets[mod.target];

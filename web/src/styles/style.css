@@ -9,6 +9,9 @@ nav { display: flex; gap: 4px; }
 button { font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 5px 11px; cursor: pointer; }
 button:hover:not(:disabled) { border-color: var(--accent); }
 button:disabled { opacity: .4; cursor: default; }
+/* The Touché tab is a link to its own page, drawn like the tab buttons. */
+a.tab { font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 5px 11px; text-decoration: none; }
+a.tab:hover { border-color: var(--accent); }
 button.tab.on, button.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
 input[type=search], .f input, .f textarea { padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; width: 100%; }
 input[type=search] { flex: 1 1 200px; max-width: 340px; background: var(--card); }

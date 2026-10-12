@@ -138,6 +138,18 @@ export async function neutralControllers(): Promise<void> {
   }
 }
 
+// One parameter read back after a write, to tell whether the keyboard kept the value; undefined when nothing
+// answered (no VR-09 input, or the unit was busy).
+export async function readOne(address: number[]): Promise<number | undefined> {
+  if (!midi.vr09Out || !midi.vr09In) return undefined;
+  const state = new Map<number, number>();
+  midi.collect = state;
+  send(rq1(address, 1));
+  await sleep(250);
+  midi.collect = null;
+  return state.get(packedAddress(address));
+}
+
 // Because the unit answers each RQ1 with one or more DT1 messages, a short wait after every request lets the
 // replies arrive; they are collected by address, 7 bits per byte packed into one number.
 export async function readBlocks(): Promise<Map<number, number>> {

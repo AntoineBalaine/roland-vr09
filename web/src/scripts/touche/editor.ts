@@ -6,7 +6,7 @@ import {
 } from "./state";
 import {
   RECALL_GAP_MS, SEND_GAP_MS, applyPorts, dt1, midi, neutralControllers, packedAddress, readBlocks, refreshPorts,
-  requestAccess, send, sendAll, sleep,
+  readOne, requestAccess, send, sendAll, sleep,
 } from "./midi";
 import {
   escapeHtml, redrawTarget, renderMods, renderPanel, renderSelection, renderTouche, transferSvg, updateMeter,
@@ -392,7 +392,8 @@ function onPanelPointerDown(event: PointerEvent): void {
     const svg = handle.closest("svg") as SVGSVGElement | null;
     if (!mod || !svg) return;
     event.preventDefault();
-    ctx.drag = { mod: mod.id, end: handle.dataset.end === "low" ? "low" : "high", target: mod.target, kind: svg.dataset.kind === "drawbar" ? "drawbar" : "knob", svg };
+    const kind = svg.dataset.kind === "drawbar" ? "drawbar" : "knob";
+    ctx.drag = { mode: "handle", mod: mod.id, end: handle.dataset.end === "low" ? "low" : "high", target: mod.target, kind, svg, startY: event.clientY, startValue: 0 };
     document.body.classList.add("dragging-handle");
     return;
   }
@@ -404,27 +405,91 @@ function onPanelPointerDown(event: PointerEvent): void {
     else selectMod(id);
     return;
   }
-  if (element.closest(".dest")) selectMod(null);
+  const svg = element.closest(".dest svg") as SVGSVGElement | null;
+  if (svg) {
+    selectMod(null);
+    startValueDrag(event, svg);
+  }
+}
+
+// Turning a knob or pulling a drawbar on the panel writes the value to the keyboard's current sound (never to
+// its saved registrations), so the panel can be played like the VR-09's own controls.
+function startValueDrag(event: PointerEvent, svg: SVGSVGElement): void {
+  const target = ctx.targets[svg.dataset.target ?? ""];
+  if (!isAvailable(target)) return;
+  if (!midi.vr09Out) {
+    status("Connect MIDI first: a control on the panel writes to the keyboard.", "bad");
+    return;
+  }
+  event.preventDefault();
+  const kind = svg.dataset.kind === "drawbar" ? "drawbar" : "knob";
+  const startValue = ctx.stored.get(target.id) ?? target.low;
+  ctx.drag = { mode: "value", mod: -1, end: "low", target: target.id, kind, svg, startY: event.clientY, startValue };
+  document.body.classList.add("dragging-handle");
+  if (kind === "drawbar") setControl(target, valueFromPointer(event));
+}
+
+// A knob moves its whole range over 150 pixels of vertical travel, as in most synth editors; a drawbar follows
+// the pointer, because its slot already shows the scale.
+function valueFromDrag(event: PointerEvent): number {
+  const drag = ctx.drag;
+  if (!drag) return 0;
+  const target = ctx.targets[drag.target];
+  if (drag.kind === "drawbar") return valueFromPointer(event);
+  const span = target.high - target.low;
+  const value = drag.startValue + ((drag.startY - event.clientY) / 150) * span;
+  return Math.round(Math.max(target.low, Math.min(target.high, value)));
+}
+
+function setControl(target: Target, value: number): void {
+  if (ctx.stored.get(target.id) === value) return;
+  ctx.stored.set(target.id, value);
+  queueValue(target, value);
+  redrawTarget(target.id);
+  status(`${target.label}: ${value}`);
+}
+
+// Because a refused or clamped write leaves another value in the keyboard, a written parameter is read back
+// once the drag ends, and the panel shows what the keyboard really holds.
+async function confirmControl(target: Target): Promise<void> {
+  const wanted = ctx.stored.get(target.id);
+  if (target.kind !== "dt1" || !target.address || wanted === undefined) return;
+  await sleep(60);
+  const held = await readOne(target.address);
+  if (held === undefined) {
+    status(`${target.label}: ${wanted} sent (no VR-09 input to read it back).`);
+    return;
+  }
+  ctx.stored.set(target.id, held);
+  redrawTarget(target.id);
+  if (held === wanted) status(`${target.label}: the keyboard holds ${held}.`, "ok");
+  else status(`${target.label}: ${wanted} was sent, but the keyboard holds ${held}.`, "bad");
 }
 
 function onPointerMove(event: PointerEvent): void {
   const drag = ctx.drag;
   if (!drag) return;
-  const mod = modById(drag.mod);
-  if (!mod) return;
-  const value = valueFromPointer(event);
-  if (mod[drag.end] === value) return;
-  mod[drag.end] = value;
-  changed(mod, false);
-  // Because the handle's element is drawn again, the drag keeps the svg of the widget, which is not replaced.
+  if (drag.mode === "value") {
+    setControl(ctx.targets[drag.target], valueFromDrag(event));
+  } else {
+    const mod = modById(drag.mod);
+    if (!mod) return;
+    const value = valueFromPointer(event);
+    if (mod[drag.end] === value) return;
+    mod[drag.end] = value;
+    changed(mod, false);
+    previewMod(mod);
+  }
+  // Because redrawing a widget replaces its svg, the drag measures against the new one.
   drag.svg = document.querySelector(`.dest[data-target="${drag.target}"] svg`) as SVGSVGElement;
-  previewMod(mod);
 }
 
 function onPointerUp(): void {
-  if (!ctx.drag) return;
+  const drag = ctx.drag;
+  if (!drag) return;
   ctx.drag = null;
   document.body.classList.remove("dragging-handle");
+  if (drag.mode === "value") confirmControl(ctx.targets[drag.target]);
 }
 
 // While a handle is dragged with the bridge live, the keyboard plays the value under the handle, so the start
@@ -514,8 +579,10 @@ function queueValue(target: Target | undefined, value: number): void {
 
 // Because a message is queued only when the rounded value changes, and the queue keeps one message per target,
 // a fast axis never floods the keyboard: at most one message leaves every few milliseconds.
+// The Live switch only gates what the Touché sends (in onToucheData), so a control turned on the panel is sent
+// even while Live is off.
 function drainOne(): void {
-  if (!ctx.live || !midi.vr09Out || ctx.pending.size === 0) return;
+  if (!midi.vr09Out || ctx.pending.size === 0) return;
   const first = ctx.pending.entries().next().value as [string, number[]];
   ctx.pending.delete(first[0]);
   send(first[1]);
