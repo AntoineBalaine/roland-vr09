@@ -225,6 +225,45 @@ is; for an Android phone, run `adb reverse tcp:8765 tcp:8765` first.
   nowhere in this Mac's MIDI ports; it is on the Linux machine, where `vr09.py` must not hold
   the port while the page runs.
 
+### Switching Lié presets from outside (found by reading Lié's code, not yet tested)
+
+Because one way to use the Touché live is to run Lié standalone beside the VR-09, we looked into
+whether a setlist script or a pedal can switch Lié's presets. These findings come from Lié 1.7.9's
+metadata, settings, logs and disassembled binary (it ships with symbols); no MIDI was sent.
+
+- **Lié has no remote control for presets.** It ignores incoming Program Change (every Program
+  Change in its code is one it sends). It has no OSC, no AppleScript dictionary (no `.sdef`, no
+  `NSAppleScriptEnabled`) and no keyboard shortcut for presets: a key-sending pedal would only
+  play the on-screen keyboard.
+- **But CC80 and CC81 from any enabled input step its presets.** `TemTouche::consumeMagicCcs`
+  reads every controller of the merged MIDI input, and `TemEncoder::isNavigationControlChange`
+  only compares the controller number, with no check of the channel or of the device. The
+  numbers come from `Lie.app/Contents/Resources/Metadatas/ButtonMetadata.xml` (CC80 left, CC81
+  right, values 0 and 127, a 200 ms `presetLoadDelayMilliseconds`). Lié moves on the button's
+  release message, and the left button goes to the previous preset, the right to the next.
+- **The logs confirm the path for the Touché's own buttons.** On 2026-10-11 the log shows
+  `[TOUCHE][BUTTON]handleRightButtonRelease` followed by a preset load. Before that load, a
+  click on "don't save" was needed: an unsaved-changes dialog in Lié blocks a switch until it is
+  answered.
+- **The practical route, untested:**
+  1. Create an IAC Driver bus and enable it as a MIDI input in Lié's settings.
+  2. Send CC81 (next) or CC80 (previous) on it, value 0 then 127 about 100 ms apart, as the
+     Touché does.
+  3. Make the setlist Lié's browser list, in order, because there is only next and previous,
+     with no jump to preset N.
+  4. Save every preset before playing, so that no unsaved-changes dialog blocks a switch.
+- **A hazard:** Lié currently enables the Midi Fighter Twister, the Scarlett 2i4 and the Digital
+  Piano as inputs (`~/Library/Application Support/Liearm64/Lie.settings`). Any of them sending
+  CC80 or CC81 would switch Lié's preset, so the inputs Lié does not need should be disabled.
+- **As a VST3 in Reaper, Lié cannot be switched by the host.** Its `getNumPrograms()` always
+  returns 1 and `setCurrentProgram()` only writes a log line. CC80 and CC81 on the track's MIDI
+  input probably step its presets as in the standalone app, since the same code is in the
+  plugin, but this is inferred. Reaper's own FX presets, which save and restore the plugin's
+  whole state, are the other way. No AU version is installed on this Mac.
+
+The test to run before relying on this: open Lié, send CC81 from an IAC bus, and check that the
+preset steps forward.
+
 ### Tools used
 
 - `tools/index_hardware_presets.py`, `tools/analyze_mappings.py`, `tools/survey_factory_presets.py`
