@@ -217,6 +217,30 @@ MIDI device (USB gadget mode, `f_midi`) that forwards and logs everything.
 Sources: https://www.roland.com/CA/products/vr-09_editor/ and
 https://apps.apple.com/app/id589704005
 
+## Documented addresses that this unit refuses
+
+Checked on 2026-10-11 with `tools/check_targets.py`, which writes a value at each of the 53 parameter
+addresses of the Touché remap catalog, reads it back, and puts the original value back (every original was
+back at the end). 45 accept the write. These 8 do not: they read 0 in all 71 library dumps, whatever the patch,
+and the write leaves the value at 0.
+
+| Address | Parameter in Roland's map |
+|---|---|
+| `00 00 40`, `00 00 41` | organ EQ high and low (range 52 to 76) |
+| `00 00 67` | overdrive dry mix level |
+| `00 00 68` | rotary brake |
+| `01 03 3A`, `01 13 3A` | upper and lower synth cutoff |
+| `01 03 64`, `01 13 64` | upper and lower synth portamento time |
+
+- The document covers the VR-09 and the VR-730, so these may exist only on the VR-730, or not be implemented
+  at all; the unit does not say.
+- The neighbouring synth parameters (resonance, attack, decay, release) do take writes, so this is not a
+  property of the part block. Whether those accepted writes are also audible has not been checked by ear.
+- The synth filter cutoff is therefore not reachable through DT1. The documented alternative is CC74 on the
+  part's channel, which changes no stored parameter and can only be judged by listening.
+- Results are in `library/target-tests.json`; `tools/make_templates.py` folds them into the statuses of
+  `web/public/maps/targets.json`.
+
 ## Write rules for DT1
 
 - One message writes one parameter. Gaps of 1 to 20 ms between messages all worked; no gap

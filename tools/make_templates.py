@@ -7,9 +7,14 @@ Writes OUTPUT_DIR/targets.json, OUTPUT_DIR/templates/<name>.json and OUTPUT_DIR/
 
 A target is one VR-09 parameter that a Touché axis can drive, either a DT1 write (address from the
 implementation document) or a Control Change. Its status says how much we trust it:
-  verified    written alone with DT1 on the unit (the upper organ drawbars)
-  recalled    changes when a dump is recalled, never written alone
-  documented  only listed in the implementation document
+  verified     written alone with DT1 on the unit and read back, or a CC whose effect was heard
+  unavailable  the unit refused the write (the address reads 0), or nothing was heard from the CC
+  recalled     changes when a dump is recalled, never written alone
+  documented   only listed in the implementation document
+
+The statuses above "documented" come from the results of the target test, library/target-tests.json,
+which tools/check_targets.py and the web page's Target test both write; they are folded in when the
+catalog is generated, so run this script again after testing.
 
 A template gives each of the four axes (CC16 to CC19) a list of targets. Every target has a range
 (low and high, in the target's own units, low may be above high to invert), a window (the part of the
@@ -17,11 +22,14 @@ axis travel, 0 to 127, over which the range is swept) and a curve. The four axes
 the 13 hardware synths in Lié (see docs/touche-lie-sniffing.md): CC16 is the body of the sound
 (level, envelope), CC17 the tone (cutoff, harmonics), CC18 the modulation and CC19 the effects.
 
-Every template is a proposal: none has been tested on the unit yet.
+Every template is a proposal. The generator reports, for each one, the axes that have no working target
+left (dead_axes) and the targets that are not available on the unit.
 """
 import json
 import os
 import sys
+
+TESTS = "library/target-tests.json"
 
 FOOTAGES = ["16'", "5 1/3'", "8'", "4'", "2 2/3'", "2'", "1 3/5'", "1 1/3'", "1'"]
 DRAWBAR_IDS = ["16", "5f", "8", "4", "2f", "2", "1f", "1ff", "1"]  # Ids avoid slashes and quotes.
@@ -82,12 +90,57 @@ def build_targets():
         cc("cc-upper-vibrato-depth", "Upper vibrato depth (CC77)", 4, 77), cc("cc-upper-vibrato-rate", "Upper vibrato rate (CC76)", 4, 76),
         cc("cc-upper-reverb", "Upper reverb send (CC91)", 4, 91), cc("cc-upper-chorus", "Upper chorus send (CC93)", 4, 93),
         cc("cc-upper-expression", "Upper expression (CC11)", 4, 11), cc("cc-upper-pan", "Upper pan (CC10)", 4, 10),
+        # The cutoff address refuses writes on this unit, so the filter is reached with CC74; 64 leaves the tone's own cutoff.
+        cc("cc-upper-cutoff", "Upper synth cutoff (CC74)", 4, 74), cc("cc-lower-cutoff", "Lower synth cutoff (CC74)", 3, 74),
+        cc("cc-upper-resonance", "Upper resonance (CC71)", 4, 71), cc("cc-upper-release", "Upper release (CC72)", 4, 72),
+        cc("cc-upper-attack", "Upper attack (CC73)", 4, 73), cc("cc-upper-decay", "Upper decay (CC75)", 4, 75),
+        cc("cc-upper-modulation", "Upper modulation wheel (CC1)", 4, 1),
         cc("cc-lower-reverb", "Lower reverb send (CC91)", 3, 91), cc("cc-lower-chorus", "Lower chorus send (CC93)", 3, 93),
         cc("cc-lower-expression", "Lower expression (CC11)", 3, 11), cc("cc-piano-reverb", "Piano (dual 2) reverb send (CC91)", 1, 91),
         cc("cc-piano-chorus", "Piano (dual 2) chorus send (CC93)", 1, 93), cc("cc-piano-expression", "Piano (dual 2) expression (CC11)", 1, 11),
         cc("cc-master-expression", "Overall volume (CC11 on channel 16)", 16, 11),
     ]
     return targets
+
+
+def apply_tests(targets, results):
+    """Fold the results of the target test into the statuses of the targets."""
+    for target in targets:
+        result = results.get(target["id"])
+        if not result:
+            continue
+        day = (result.get("at") or "")[:10]
+        if target["kind"] == "dt1":
+            verdict = result.get("verdict", "")
+            if verdict == "accepted" and result.get("heard") is False:
+                target["status"], target["evidence"] = "unavailable", f"accepted by the unit but nothing was heard, {day}"
+            elif verdict == "accepted":
+                target["status"], target["evidence"] = "verified", f"written and read back on the unit, {day}"
+            elif verdict.startswith("refused"):
+                target["status"], target["evidence"] = "unavailable", f"the unit reads 0 here and refuses writes, {day}"
+        elif "heard" in result:
+            heard = result["heard"]
+            target["status"] = "verified" if heard else "unavailable"
+            target["evidence"] = f"{'a change was heard' if heard else 'nothing was heard'}, {day}"
+    return targets
+
+
+def assess(templates, targets):
+    """Say for every template which targets do not work, and which axes are left with none."""
+    status = {x["id"]: x["status"] for x in targets}
+    for tpl in templates:
+        used = [item["target"] for axis in tpl["axes"] for item in axis["targets"]]
+        tpl["unavailable_targets"] = sorted({i for i in used if status[i] == "unavailable"})
+        tpl["untested_targets"] = sorted({i for i in used if status[i] in ("documented", "recalled")})
+        tpl["dead_axes"] = [axis["axis"] for axis in tpl["axes"] if all(status[i["target"]] == "unavailable" for i in axis["targets"])]
+        if tpl["dead_axes"]:
+            tpl["status"] = "needs rework: no working target on axis " + ", ".join(f"CC{a}" for a in tpl["dead_axes"])
+        elif tpl["unavailable_targets"]:
+            tpl["status"] = "partly working: " + ", ".join(tpl["unavailable_targets"]) + " are unavailable on this unit"
+        elif tpl["untested_targets"]:
+            tpl["status"] = "every address verified; CC targets need listening"
+        else:
+            tpl["status"] = "every target verified"
 
 
 def t(target, low, high, window=(0, 127), curve="linear"):
@@ -202,6 +255,34 @@ def build_templates():
     out.append(template("xfade-piano-organ", "layer", "Crossfade the upper piano into the organ.",
         [t("upper-piano-volume", 127, 20)], [t("organ-level", 20, 127)], [t("rotary-fast", 0, 1)], [t("cc-piano-reverb", 10, 90)]))
 
+    # ---- by section: one per combination of sounding sections, built on targets that change a held note ----
+    # The part volumes and the resonance were accepted by the unit; resonance is stored as 64 when neutral, so it only rises.
+    # The attack, decay and release are left out: they shape the start or the end of a note, not a note being held.
+    out.append(template("section-synth-layers", "synth layers", "Upper synth and its dual 2 layer: body swells the main layer, tone opens the cutoff, modulation raises the resonance, effects blend in the second layer.",
+        [t("upper-synth-volume", 40, 127)], [t("cc-upper-cutoff", 40, 127)], [t("upper-synth-resonance", 64, 110)], [t("upper-synth2-volume", 0, 127)]))
+    out.append(template("section-synth", "synth", "One upper synth: body swells it, tone opens the cutoff, effects raise the resonance.",
+        [t("upper-synth-volume", 40, 127)], [t("cc-upper-cutoff", 40, 127)], [t("cc-upper-vibrato-depth", 0, 80)], [t("upper-synth-resonance", 64, 115)]))
+    out.append(template("section-synth-split", "synth split", "Upper synth over a lower synth: body swells the upper part, tone opens its cutoff, modulation and effects play the lower part.",
+        [t("upper-synth-volume", 40, 127)], [t("cc-upper-cutoff", 40, 127)], [t("lower-synth-volume", 30, 127)], [t("lower-synth-resonance", 64, 110)]))
+    out.append(template("section-piano", "piano", "One upper piano: body swells it; the other axes are the Upper channel's CCs, which need listening.",
+        [t("upper-piano-volume", 40, 127)], [t("cc-upper-chorus", 0, 90)], [t("cc-upper-pan", 44, 84)], [t("cc-upper-reverb", 10, 100)]))
+    out.append(template("section-piano-split", "piano split", "Upper piano over a lower synth: body swells the piano, tone and modulation play the lower synth.",
+        [t("upper-piano-volume", 40, 127)], [t("lower-synth-volume", 30, 127)], [t("lower-synth-resonance", 64, 110)], [t("cc-upper-reverb", 10, 100)]))
+    out.append(template("section-piano-layer", "piano layer", "Upper piano with a synth dual 2 layer: body swells the piano, tone blends in the synth layer.",
+        [t("upper-piano-volume", 40, 127)], [t("upper-synth2-volume", 0, 127)], [t("cc-upper-chorus", 0, 90)], [t("cc-upper-reverb", 10, 100)]))
+    out.append(template("section-organ-split", "organ split", "Organ over a lower synth: body is the organ level, tone opens the drawbars, modulation swells the lower synth.",
+        [t("organ-level", 70, 127)], drawbar_sweep("upper", [3, 4, 5, 6, 7, 8], 0, 15, 50), [t("lower-synth-volume", 30, 127)], [t("overdrive", 0, 90, curve="soft")]))
+
+    # ---- single tones: wide ranges, so that each control can be judged by ear on one tone at a time ----
+    out.append(template("tone-synth-test-a", "single tone", "Test set A for one synth tone: expression, cutoff, vibrato depth and resonance, all as CCs.",
+        [t("cc-upper-expression", 60, 127)], [t("cc-upper-cutoff", 0, 127)], [t("cc-upper-vibrato-depth", 0, 127)], [t("cc-upper-resonance", 0, 127)]))
+    out.append(template("tone-synth-test-b", "single tone", "Test set B for one synth tone: part volume and resonance by address, modulation wheel and reverb.",
+        [t("upper-synth-volume", 60, 127)], [t("upper-synth-resonance", 0, 127)], [t("cc-upper-modulation", 0, 127)], [t("cc-upper-reverb", 0, 127)]))
+    out.append(template("tone-synth-test-c", "single tone", "Test set C for one synth tone: chorus, pan, vibrato rate and attack, all as CCs.",
+        [t("cc-upper-chorus", 0, 127)], [t("cc-upper-pan", 0, 127)], [t("cc-upper-vibrato-rate", 0, 127)], [t("cc-upper-attack", 0, 127)]))
+    out.append(template("tone-piano-test", "single tone", "Test set for one piano tone: part volume, cutoff, chorus and reverb.",
+        [t("upper-piano-volume", 60, 127)], [t("cc-upper-cutoff", 0, 127)], [t("cc-upper-chorus", 0, 127)], [t("cc-upper-reverb", 0, 127)]))
+
     # ---- performance ----
     out.append(template("perform-expression-reverb", "any", "A neutral performance template: overall volume, reverb and chorus sends.",
         [t("cc-master-expression", 50, 127)], [t("cc-upper-reverb", 0, 110)], [t("cc-upper-chorus", 0, 90)], [t("cc-upper-vibrato-depth", 0, 90)]))
@@ -229,7 +310,10 @@ def check(targets, templates):
 def main():
     out_dir = sys.argv[1] if len(sys.argv) > 1 else "web/public/maps"
     targets, templates = build_targets(), build_templates()
+    results = json.load(open(TESTS)) if os.path.exists(TESTS) else {}
+    apply_tests(targets, results)
     check(targets, templates)
+    assess(templates, targets)
     os.makedirs(os.path.join(out_dir, "templates"), exist_ok=True)
     with open(os.path.join(out_dir, "targets.json"), "w") as f:
         json.dump(targets, f, indent=1)
@@ -237,7 +321,8 @@ def main():
     for tpl in templates:
         with open(os.path.join(out_dir, "templates", tpl["name"] + ".json"), "w") as f:
             json.dump(tpl, f, indent=1)
-        index.append({"name": tpl["name"], "patch_type": tpl["patch_type"], "summary": tpl["summary"]})
+        index.append({"name": tpl["name"], "patch_type": tpl["patch_type"], "summary": tpl["summary"], "status": tpl["status"],
+                      "dead_axes": tpl["dead_axes"], "unavailable_targets": tpl["unavailable_targets"]})
     with open(os.path.join(out_dir, "index.json"), "w") as f:
         json.dump(index, f, indent=1)
     kinds = {}
@@ -245,6 +330,15 @@ def main():
         kinds[tpl["patch_type"]] = kinds.get(tpl["patch_type"], 0) + 1
     print(f"{len(targets)} targets, {len(templates)} templates written to {out_dir}")
     print(dict(sorted(kinds.items())))
+    counts = {}
+    for x in targets:
+        counts[x["status"]] = counts.get(x["status"], 0) + 1
+    print("target statuses:", dict(sorted(counts.items())), f"(from {len(results)} test results)")
+    states = {}
+    for tpl in templates:
+        key = tpl["status"].split(":")[0]
+        states[key] = states.get(key, 0) + 1
+    print("templates:", dict(sorted(states.items())))
 
 
 main()

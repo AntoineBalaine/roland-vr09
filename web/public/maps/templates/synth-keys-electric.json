@@ -2,7 +2,7 @@
  "name": "synth-keys-electric",
  "patch_type": "synth keys",
  "summary": "Electric-piano-like synth keys: decay on body, tremolo-ish vibrato, reverb.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC17",
  "axes": [
   {
    "axis": 16,
@@ -78,5 +78,16 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "upper-synth-cutoff"
+ ],
+ "untested_targets": [
+  "cc-upper-reverb",
+  "cc-upper-vibrato-depth",
+  "cc-upper-vibrato-rate"
+ ],
+ "dead_axes": [
+  17
  ]
 }

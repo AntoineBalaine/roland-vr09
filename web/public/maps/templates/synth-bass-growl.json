@@ -2,7 +2,7 @@
  "name": "synth-bass-growl",
  "patch_type": "synth bass",
  "summary": "Resonance does the growling; attack is shortened as the tone opens.",
- "status": "proposal, untested",
+ "status": "partly working: upper-synth-cutoff are unavailable on this unit",
  "axes": [
   {
    "axis": 16,
@@ -78,5 +78,12 @@
     }
    ]
   }
- ]
+ ],
+ "unavailable_targets": [
+  "upper-synth-cutoff"
+ ],
+ "untested_targets": [
+  "cc-upper-chorus"
+ ],
+ "dead_axes": []
 }

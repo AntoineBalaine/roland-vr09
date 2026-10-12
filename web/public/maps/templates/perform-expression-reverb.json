@@ -2,7 +2,7 @@
  "name": "perform-expression-reverb",
  "patch_type": "any",
  "summary": "A neutral performance template: overall volume, reverb and chorus sends.",
- "status": "proposal, untested",
+ "status": "every address verified; CC targets need listening",
  "axes": [
   {
    "axis": 16,
@@ -68,5 +68,13 @@
     }
    ]
   }
- ]
+ ],
+ "unavailable_targets": [],
+ "untested_targets": [
+  "cc-master-expression",
+  "cc-upper-chorus",
+  "cc-upper-reverb",
+  "cc-upper-vibrato-depth"
+ ],
+ "dead_axes": []
 }

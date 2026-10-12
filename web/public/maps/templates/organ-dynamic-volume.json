@@ -2,7 +2,7 @@
  "name": "organ-dynamic-volume",
  "patch_type": "organ",
  "summary": "The body axis is an organ volume pedal.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC17",
  "axes": [
   {
    "axis": 16,
@@ -68,5 +68,12 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "eq-high"
+ ],
+ "untested_targets": [],
+ "dead_axes": [
+  17
  ]
 }

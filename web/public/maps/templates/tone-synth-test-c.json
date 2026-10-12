@@ -1,0 +1,80 @@
+{
+ "name": "tone-synth-test-c",
+ "patch_type": "single tone",
+ "summary": "Test set C for one synth tone: chorus, pan, vibrato rate and attack, all as CCs.",
+ "status": "every address verified; CC targets need listening",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "cc-upper-chorus",
+     "low": 0,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "cc-upper-pan",
+     "low": 0,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "cc-upper-vibrato-rate",
+     "low": 0,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "cc-upper-attack",
+     "low": 0,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ],
+ "unavailable_targets": [],
+ "untested_targets": [
+  "cc-upper-attack",
+  "cc-upper-chorus",
+  "cc-upper-pan",
+  "cc-upper-vibrato-rate"
+ ],
+ "dead_axes": []
+}

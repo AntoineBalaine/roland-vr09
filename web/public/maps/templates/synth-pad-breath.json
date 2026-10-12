@@ -2,7 +2,7 @@
  "name": "synth-pad-breath",
  "patch_type": "synth pad",
  "summary": "Breathing pad: envelope times on the body and effects axes, filter movement on the tone axis.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC17",
  "axes": [
   {
    "axis": 16,
@@ -68,5 +68,12 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "upper-synth-cutoff"
+ ],
+ "untested_targets": [],
+ "dead_axes": [
+  17
  ]
 }

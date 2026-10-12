@@ -2,7 +2,7 @@
  "name": "synth-brass-swell",
  "patch_type": "synth brass",
  "summary": "A brass swell: attack lengthens while the filter opens.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC17",
  "axes": [
   {
    "axis": 16,
@@ -68,5 +68,15 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "upper-synth-cutoff"
+ ],
+ "untested_targets": [
+  "cc-upper-reverb",
+  "cc-upper-vibrato-depth"
+ ],
+ "dead_axes": [
+  17
  ]
 }

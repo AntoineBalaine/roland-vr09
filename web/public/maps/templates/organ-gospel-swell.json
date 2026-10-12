@@ -2,7 +2,7 @@
  "name": "organ-gospel-swell",
  "patch_type": "organ",
  "summary": "Body swells the low drawbars together; tone drives overdrive and brightness; effects add leakage.",
- "status": "proposal, untested",
+ "status": "partly working: eq-high are unavailable on this unit",
  "axes": [
   {
    "axis": 16,
@@ -98,5 +98,10 @@
     }
    ]
   }
- ]
+ ],
+ "unavailable_targets": [
+  "eq-high"
+ ],
+ "untested_targets": [],
+ "dead_axes": []
 }

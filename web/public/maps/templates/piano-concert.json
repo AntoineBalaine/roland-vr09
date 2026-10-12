@@ -2,7 +2,7 @@
  "name": "piano-concert",
  "patch_type": "piano",
  "summary": "A concert piano: expression on body, reverb on effects, chorus kept subtle.",
- "status": "proposal, untested",
+ "status": "every address verified; CC targets need listening",
  "axes": [
   {
    "axis": 16,
@@ -68,5 +68,13 @@
     }
    ]
   }
- ]
+ ],
+ "unavailable_targets": [],
+ "untested_targets": [
+  "cc-piano-chorus",
+  "cc-piano-expression",
+  "cc-piano-reverb",
+  "cc-upper-pan"
+ ],
+ "dead_axes": []
 }

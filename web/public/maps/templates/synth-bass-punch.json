@@ -2,7 +2,7 @@
  "name": "synth-bass-punch",
  "patch_type": "synth bass",
  "summary": "A punchy bass: cutoff and resonance on tone, decay on body.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC18",
  "axes": [
   {
    "axis": 16,
@@ -78,5 +78,13 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "upper-synth-cutoff",
+  "upper-synth-portamento"
+ ],
+ "untested_targets": [],
+ "dead_axes": [
+  18
  ]
 }

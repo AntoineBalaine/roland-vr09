@@ -2,7 +2,7 @@
  "name": "synth-pad-evolve",
  "patch_type": "synth pad",
  "summary": "A slow pad: attack and cutoff evolve; the effects axis opens reverb and release.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC17",
  "axes": [
   {
    "axis": 16,
@@ -78,5 +78,15 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "upper-synth-cutoff"
+ ],
+ "untested_targets": [
+  "cc-upper-reverb",
+  "cc-upper-vibrato-depth"
+ ],
+ "dead_axes": [
+  17
  ]
 }

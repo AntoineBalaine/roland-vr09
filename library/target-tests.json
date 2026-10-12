@@ -1,0 +1,532 @@
+{
+  "organ-upper-d5f": {
+    "kind": "dt1",
+    "original": 8,
+    "sent": 0,
+    "readback": 0,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper organ drawbar 5 1/3'",
+    "at": "2026-10-12T01:32:37.658Z"
+  },
+  "organ-upper-d8": {
+    "kind": "dt1",
+    "original": 8,
+    "sent": 0,
+    "readback": 0,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper organ drawbar 8'",
+    "at": "2026-10-12T01:32:37.864Z"
+  },
+  "organ-upper-d1ff": {
+    "kind": "dt1",
+    "original": 4,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper organ drawbar 1 1/3'",
+    "at": "2026-10-12T01:32:38.890Z"
+  },
+  "organ-upper-d16": {
+    "kind": "dt1",
+    "original": 4,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper organ drawbar 16'",
+    "at": "2026-10-12T01:32:37.451Z"
+  },
+  "organ-upper-d4": {
+    "kind": "dt1",
+    "original": 7,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper organ drawbar 4'",
+    "at": "2026-10-12T01:32:38.069Z"
+  },
+  "organ-upper-d2f": {
+    "kind": "dt1",
+    "original": 4,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper organ drawbar 2 2/3'",
+    "at": "2026-10-12T01:32:38.274Z"
+  },
+  "organ-upper-d2": {
+    "kind": "dt1",
+    "original": 4,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper organ drawbar 2'",
+    "at": "2026-10-12T01:32:38.480Z"
+  },
+  "organ-upper-d1f": {
+    "kind": "dt1",
+    "original": 4,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper organ drawbar 1 3/5'",
+    "at": "2026-10-12T01:32:38.685Z"
+  },
+  "organ-upper-d1": {
+    "kind": "dt1",
+    "original": 4,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper organ drawbar 1'",
+    "at": "2026-10-12T01:32:39.605Z"
+  },
+  "organ-lower-d16": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower organ drawbar 16'",
+    "at": "2026-10-12T01:32:39.811Z"
+  },
+  "organ-lower-d5f": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower organ drawbar 5 1/3'",
+    "at": "2026-10-12T01:32:40.017Z"
+  },
+  "organ-lower-d8": {
+    "kind": "dt1",
+    "original": 8,
+    "sent": 0,
+    "readback": 0,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower organ drawbar 8'",
+    "at": "2026-10-12T01:32:40.223Z"
+  },
+  "organ-lower-d4": {
+    "kind": "dt1",
+    "original": 6,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower organ drawbar 4'",
+    "at": "2026-10-12T01:32:40.429Z"
+  },
+  "organ-lower-d2f": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower organ drawbar 2 2/3'",
+    "at": "2026-10-12T01:32:40.636Z"
+  },
+  "organ-lower-d2": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower organ drawbar 2'",
+    "at": "2026-10-12T01:32:40.842Z"
+  },
+  "organ-lower-d1f": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower organ drawbar 1 3/5'",
+    "at": "2026-10-12T01:32:41.049Z"
+  },
+  "organ-lower-d1ff": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower organ drawbar 1 1/3'",
+    "at": "2026-10-12T01:32:41.254Z"
+  },
+  "organ-lower-d1": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 8,
+    "readback": 8,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower organ drawbar 1'",
+    "at": "2026-10-12T01:32:41.461Z"
+  },
+  "organ-level": {
+    "kind": "dt1",
+    "original": 127,
+    "sent": 0,
+    "readback": 0,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Organ level",
+    "at": "2026-10-12T01:32:41.667Z"
+  },
+  "overdrive": {
+    "kind": "dt1",
+    "original": 12,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Organ overdrive",
+    "at": "2026-10-12T01:32:41.874Z"
+  },
+  "overdrive-dry": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 127,
+    "readback": 0,
+    "restored": true,
+    "verdict": "refused: the value did not change",
+    "label": "Overdrive dry mix level",
+    "at": "2026-10-12T01:32:42.081Z"
+  },
+  "eq-high": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 76,
+    "readback": 0,
+    "restored": true,
+    "verdict": "refused: the value did not change",
+    "label": "Organ EQ high (-12 to +12 dB)",
+    "at": "2026-10-12T01:32:42.286Z"
+  },
+  "eq-low": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 76,
+    "readback": 0,
+    "restored": true,
+    "verdict": "refused: the value did not change",
+    "label": "Organ EQ low (-12 to +12 dB)",
+    "at": "2026-10-12T01:32:42.493Z"
+  },
+  "leakage": {
+    "kind": "dt1",
+    "original": 53,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Organ leakage level",
+    "at": "2026-10-12T01:32:42.700Z"
+  },
+  "click-on": {
+    "kind": "dt1",
+    "original": 16,
+    "sent": 63,
+    "readback": 63,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Key click on",
+    "at": "2026-10-12T01:32:42.906Z"
+  },
+  "click-off": {
+    "kind": "dt1",
+    "original": 16,
+    "sent": 63,
+    "readback": 63,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Key click off",
+    "at": "2026-10-12T01:32:43.624Z"
+  },
+  "rotary-fast": {
+    "kind": "dt1",
+    "original": 1,
+    "sent": 0,
+    "readback": 0,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Rotary fast / slow switch",
+    "at": "2026-10-12T01:32:43.831Z"
+  },
+  "rotary-brake": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 1,
+    "readback": 0,
+    "restored": true,
+    "verdict": "refused: the value did not change",
+    "label": "Rotary brake",
+    "at": "2026-10-12T01:32:44.038Z"
+  },
+  "woofer-slow": {
+    "kind": "dt1",
+    "original": 8,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Rotary woofer slow speed",
+    "at": "2026-10-12T01:32:44.244Z"
+  },
+  "woofer-fast": {
+    "kind": "dt1",
+    "original": 80,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Rotary woofer fast speed",
+    "at": "2026-10-12T01:32:44.450Z"
+  },
+  "woofer-accel": {
+    "kind": "dt1",
+    "original": 1,
+    "sent": 15,
+    "readback": 15,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Rotary woofer acceleration",
+    "at": "2026-10-12T01:32:44.655Z"
+  },
+  "tweeter-slow": {
+    "kind": "dt1",
+    "original": 5,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Rotary tweeter slow speed",
+    "at": "2026-10-12T01:32:44.861Z"
+  },
+  "tweeter-fast": {
+    "kind": "dt1",
+    "original": 83,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Rotary tweeter fast speed",
+    "at": "2026-10-12T01:32:45.068Z"
+  },
+  "tweeter-accel": {
+    "kind": "dt1",
+    "original": 4,
+    "sent": 15,
+    "readback": 15,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Rotary tweeter acceleration",
+    "at": "2026-10-12T01:32:45.274Z"
+  },
+  "rhythm-level": {
+    "kind": "dt1",
+    "original": 90,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Rhythm level",
+    "at": "2026-10-12T01:32:45.479Z"
+  },
+  "song-level": {
+    "kind": "dt1",
+    "original": 90,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Song level",
+    "at": "2026-10-12T01:32:45.686Z"
+  },
+  "upper-synth-cutoff": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 127,
+    "readback": 0,
+    "restored": true,
+    "verdict": "refused: the value did not change",
+    "label": "Upper synth cutoff",
+    "at": "2026-10-12T01:32:45.892Z"
+  },
+  "upper-synth-resonance": {
+    "kind": "dt1",
+    "original": 64,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper synth resonance",
+    "at": "2026-10-12T01:32:46.099Z"
+  },
+  "upper-synth-attack": {
+    "kind": "dt1",
+    "original": 64,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper synth attack",
+    "at": "2026-10-12T01:32:46.305Z"
+  },
+  "upper-synth-decay": {
+    "kind": "dt1",
+    "original": 64,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper synth decay",
+    "at": "2026-10-12T01:32:46.512Z"
+  },
+  "upper-synth-release": {
+    "kind": "dt1",
+    "original": 64,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper synth release",
+    "at": "2026-10-12T01:32:46.719Z"
+  },
+  "upper-synth-portamento": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 127,
+    "readback": 0,
+    "restored": true,
+    "verdict": "refused: the value did not change",
+    "label": "Upper synth portamento time",
+    "at": "2026-10-12T01:32:46.925Z"
+  },
+  "lower-synth-cutoff": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 127,
+    "readback": 0,
+    "restored": true,
+    "verdict": "refused: the value did not change",
+    "label": "Lower synth cutoff",
+    "at": "2026-10-12T01:32:47.132Z"
+  },
+  "lower-synth-resonance": {
+    "kind": "dt1",
+    "original": 64,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower synth resonance",
+    "at": "2026-10-12T01:32:47.338Z"
+  },
+  "lower-synth-attack": {
+    "kind": "dt1",
+    "original": 64,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower synth attack",
+    "at": "2026-10-12T01:32:47.544Z"
+  },
+  "lower-synth-decay": {
+    "kind": "dt1",
+    "original": 64,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower synth decay",
+    "at": "2026-10-12T01:32:47.751Z"
+  },
+  "lower-synth-release": {
+    "kind": "dt1",
+    "original": 64,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower synth release",
+    "at": "2026-10-12T01:32:47.958Z"
+  },
+  "lower-synth-portamento": {
+    "kind": "dt1",
+    "original": 0,
+    "sent": 127,
+    "readback": 0,
+    "restored": true,
+    "verdict": "refused: the value did not change",
+    "label": "Lower synth portamento time",
+    "at": "2026-10-12T01:32:48.164Z"
+  },
+  "upper-piano-volume": {
+    "kind": "dt1",
+    "original": 100,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper piano volume",
+    "at": "2026-10-12T01:32:48.371Z"
+  },
+  "upper-synth-volume": {
+    "kind": "dt1",
+    "original": 100,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper synth volume",
+    "at": "2026-10-12T01:32:48.577Z"
+  },
+  "upper-synth2-volume": {
+    "kind": "dt1",
+    "original": 100,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Upper synth (dual 2) volume",
+    "at": "2026-10-12T01:32:48.782Z"
+  },
+  "lower-piano-volume": {
+    "kind": "dt1",
+    "original": 100,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower piano volume",
+    "at": "2026-10-12T01:32:48.989Z"
+  },
+  "lower-synth-volume": {
+    "kind": "dt1",
+    "original": 100,
+    "sent": 127,
+    "readback": 127,
+    "restored": true,
+    "verdict": "accepted",
+    "label": "Lower synth volume",
+    "at": "2026-10-12T01:32:49.195Z"
+  }
+}

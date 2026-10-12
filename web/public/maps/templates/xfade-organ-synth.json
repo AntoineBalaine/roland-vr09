@@ -2,7 +2,7 @@
  "name": "xfade-organ-synth",
  "patch_type": "layer",
  "summary": "Crossfade the organ into the upper synth.",
- "status": "proposal, untested",
+ "status": "every address verified; CC targets need listening",
  "axes": [
   {
    "axis": 16,
@@ -68,5 +68,10 @@
     }
    ]
   }
- ]
+ ],
+ "unavailable_targets": [],
+ "untested_targets": [
+  "cc-upper-reverb"
+ ],
+ "dead_axes": []
 }

@@ -2,7 +2,7 @@
  "name": "organ-click-and-air",
  "patch_type": "organ",
  "summary": "Mechanical character of the organ: key clicks and leakage.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC19",
  "axes": [
   {
    "axis": 16,
@@ -68,5 +68,12 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "eq-high"
+ ],
+ "untested_targets": [],
+ "dead_axes": [
+  19
  ]
 }

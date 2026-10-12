@@ -2,7 +2,7 @@
  "name": "synth-lower-layer",
  "patch_type": "synth",
  "summary": "Same ideas as synth-filter-only, but on the lower synth part.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC17",
  "axes": [
   {
    "axis": 16,
@@ -68,5 +68,14 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "lower-synth-cutoff"
+ ],
+ "untested_targets": [
+  "cc-lower-reverb"
+ ],
+ "dead_axes": [
+  17
  ]
 }

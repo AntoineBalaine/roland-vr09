@@ -16,6 +16,7 @@ import "../styles/style.css";
       <nav>
         <button class="tab on" id="tab-library">Library</button>
         <button class="tab" id="tab-setlist">Setlist <span id="setlist-count"></span></button>
+        <button class="tab" id="tab-pairings">Pairings</button>
       </nav>
       <input id="q" type="search" placeholder="Search title, tone, effect, key" autofocus />
       <label id="todo-label"><input id="todo" type="checkbox" /> not reviewed only</label>
@@ -32,6 +33,20 @@ import "../styles/style.css";
         patches from the Library tab.
       </p>
       <ol id="items"></ol>
+    </section>
+    <section id="pairings" hidden>
+      <p class="hint">
+        Each row pairs a registration (a patch of the library) with the mapping the Touché should use for it. A change is
+        saved at once, in the <code>touche</code> field of the patch in <code>library/catalog.yaml</code>. Choosing a
+        registration fills in a mapping suggested from its sound (the sections that sound and the group of its synth tone).
+      </p>
+      <div class="bar">
+        <button id="pair-add">Add a pairing</button>
+        <button id="pair-suggest" class="primary">Pair the unpaired patches from their sounds</button>
+        <button id="pair-redo">Re-pair every patch from its sounds</button>
+        <span id="pair-count"></span>
+      </div>
+      <table id="pair-table"></table>
     </section>
     <div id="toast"></div>
     <script>

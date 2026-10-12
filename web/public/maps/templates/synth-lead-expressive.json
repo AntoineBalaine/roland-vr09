@@ -2,7 +2,7 @@
  "name": "synth-lead-expressive",
  "patch_type": "synth lead",
  "summary": "Cutoff and resonance open together; vibrato grows with the modulation axis.",
- "status": "proposal, untested",
+ "status": "partly working: upper-synth-cutoff are unavailable on this unit",
  "axes": [
   {
    "axis": 16,
@@ -98,5 +98,15 @@
     }
    ]
   }
- ]
+ ],
+ "unavailable_targets": [
+  "upper-synth-cutoff"
+ ],
+ "untested_targets": [
+  "cc-upper-chorus",
+  "cc-upper-reverb",
+  "cc-upper-vibrato-depth",
+  "cc-upper-vibrato-rate"
+ ],
+ "dead_axes": []
 }

@@ -2,7 +2,7 @@
  "name": "synth-strings-ensemble",
  "patch_type": "synth strings",
  "summary": "String sections: slow attack, chorus on the effects axis, vibrato on the modulation axis.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC17",
  "axes": [
   {
    "axis": 16,
@@ -78,5 +78,16 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "upper-synth-cutoff"
+ ],
+ "untested_targets": [
+  "cc-upper-chorus",
+  "cc-upper-reverb",
+  "cc-upper-vibrato-depth"
+ ],
+ "dead_axes": [
+  17
  ]
 }

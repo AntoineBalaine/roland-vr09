@@ -2,7 +2,7 @@
  "name": "organ-brightness-sweep",
  "patch_type": "organ",
  "summary": "Tone opens the upper harmonics one after the other; body is the level; modulation flips the rotary; effects add overdrive.",
- "status": "proposal, untested",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -118,5 +118,8 @@
     }
    ]
   }
- ]
+ ],
+ "unavailable_targets": [],
+ "untested_targets": [],
+ "dead_axes": []
 }

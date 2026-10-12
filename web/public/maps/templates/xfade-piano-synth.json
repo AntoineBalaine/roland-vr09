@@ -2,7 +2,7 @@
  "name": "xfade-piano-synth",
  "patch_type": "layer",
  "summary": "Crossfade the upper piano into the upper synth.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC18",
  "axes": [
   {
    "axis": 16,
@@ -68,5 +68,14 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "upper-synth-cutoff"
+ ],
+ "untested_targets": [
+  "cc-upper-reverb"
+ ],
+ "dead_axes": [
+  18
  ]
 }

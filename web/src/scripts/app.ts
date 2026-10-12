@@ -8,8 +8,28 @@ interface Patch {
   notes: string;
   tags: string[];
   reviewed: boolean;
+  touche: string;
   photo: string;
   audio: string;
+}
+interface TemplateInfo {
+  name: string;
+  patch_type: string;
+  status: string;
+  dead_axes: number[];
+}
+interface Suggestion {
+  template: string;
+  reason: string;
+}
+interface PairingData {
+  templates: TemplateInfo[];
+  order: string[];
+  titles: Record<string, string>;
+  pairings: Record<string, string>;
+  suggestions: Record<string, Suggestion>;
+  capture_running: boolean;
+  message?: string;
 }
 interface PageData {
   patches: Record<string, Patch>;
@@ -25,6 +45,8 @@ let order: string[] = [];
 let setlist: string[] = [];
 let editing: string | null = null;
 let locked = false;
+let pair: PairingData | null = null;
+let drafts = 0; // rows added with 'Add a pairing' that are not saved yet
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string): T => document.getElementById(id) as T;
 const esc = (s: unknown): string =>
@@ -40,9 +62,9 @@ function toast(text: string, bad = false): void {
   clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => (t.className = ""), bad ? 5000 : 1800);
 }
-async function post(path: string, body: unknown): Promise<PageData> {
+async function post<T = PageData>(path: string, body: unknown): Promise<T> {
   let r: Response;
-  let data: PageData & { error?: string };
+  let data: T & { error?: string };
   try {
     r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     data = await r.json();
@@ -165,14 +187,14 @@ function cardHtml(key: string): string {
   const p = P[key];
   const at = setlist.indexOf(key) + 1;
   if (key === editing) return editHtml(key);
-  const rows = (["tone", "effect", "level", "other"] as const)
+  const rows = (["tone", "effect", "level", "other", "touche"] as const)
     .filter((f) => p[f])
-    .map((f) => `<div class="row">${f}: <b>${esc(p[f])}</b></div>`)
+    .map((f) => `<div class="row">${f === "touche" ? "mapping" : f}: <b>${esc(p[f])}</b></div>`)
     .join("");
   const extra =
     (p.tags.length ? `<div class="row">tags: <b>${esc(p.tags.join(", "))}</b></div>` : "") +
     (p.notes ? `<div class="row">notes: <b>${esc(p.notes)}</b></div>` : "");
-  const text = [p.title, p.tone, p.effect, p.level, p.other, p.notes, p.tags.join(" "), key].join(" ").toLowerCase();
+  const text = [p.title, p.tone, p.effect, p.level, p.other, p.touche, p.notes, p.tags.join(" "), key].join(" ").toLowerCase();
   return `<article class="card" data-key="${esc(key)}" data-reviewed="${p.reviewed ? "yes" : "no"}" data-text="${esc(text)}">
     ${photoHtml(p)}
     <div class="body"><div class="title">${esc(p.title || "(no title)")}</div><div class="key">${esc(key)}</div>${rows}${extra}
@@ -249,6 +271,122 @@ async function saveFields(key: string, fields: Fields, message?: string): Promis
   toast(data.message ?? message ?? "saved");
 }
 
+
+// Pairings -----------------------------------------------------------------------------------------
+function templateLabel(info: TemplateInfo): string {
+  const note = info.dead_axes.length ? " - needs rework" : info.status.startsWith("partly") ? " - partly working" : "";
+  return `${info.name} (${info.patch_type})${note}`;
+}
+function patchOptions(data: PairingData, selected: string): string {
+  const taken = new Set(Object.keys(data.pairings));
+  return (
+    `<option value="">(choose a registration)</option>` +
+    data.order.map((k) => `<option value="${esc(k)}" ${k === selected ? "selected" : ""} ${taken.has(k) && k !== selected ? "disabled" : ""}>${esc(data.titles[k] || k)}</option>`).join("")
+  );
+}
+function mappingOptions(data: PairingData, selected: string): string {
+  return `<option value="">(choose a mapping)</option>` + data.templates.map((x) => `<option value="${esc(x.name)}" ${x.name === selected ? "selected" : ""}>${esc(templateLabel(x))}</option>`).join("");
+}
+function noteHtml(data: PairingData, key: string, template: string): string {
+  const info = data.templates.find((x) => x.name === template);
+  const parts: string[] = [];
+  if (info) parts.push(info.dead_axes.length ? `<span class="warn">${esc(info.status)}</span>` : esc(info.status));
+  const s = data.suggestions[key];
+  if (s && s.template && s.template !== template) {
+    parts.push(`suggested: ${esc(s.template)} (${esc(s.reason)}) <button data-act="use" data-template="${esc(s.template)}">Use it</button>`);
+  } else if (s && s.template) parts.push(`matches the suggestion (${esc(s.reason)})`);
+  return parts.join("<br>");
+}
+function renderPairings(): void {
+  if (!pair) return;
+  const data = pair;
+  const keys = data.order.filter((k) => data.pairings[k]);
+  let html = "<tr><th>Registration</th><th>Mapping</th><th>Note</th><th></th></tr>";
+  for (const key of keys) {
+    html += `<tr data-key="${esc(key)}"><td><select class="pair-patch">${patchOptions(data, key)}</select></td>` +
+      `<td><select class="pair-map">${mappingOptions(data, data.pairings[key])}</select></td>` +
+      `<td class="note">${noteHtml(data, key, data.pairings[key])}</td><td class="act"><button data-act="remove" title="Remove this pairing">x</button></td></tr>`;
+  }
+  for (let i = 0; i < drafts; i++) {
+    html += `<tr class="draft" data-key=""><td><select class="pair-patch">${patchOptions(data, "")}</select></td>` +
+      `<td><select class="pair-map">${mappingOptions(data, "")}</select></td><td class="note">Choose a registration to see a suggestion.</td>` +
+      `<td class="act"><button data-act="save" class="primary">Save</button> <button data-act="remove" title="Discard">x</button></td></tr>`;
+  }
+  $("pair-table").innerHTML = html;
+  const unpaired = data.order.length - keys.length;
+  $("pair-count").textContent = `${keys.length} paired, ${unpaired} without a mapping`;
+}
+async function loadPairings(): Promise<void> {
+  pair = await (await fetch("/api/pairings")).json();
+  renderPairings();
+}
+async function savePair(key: string, template: string | null): Promise<void> {
+  pair = await post<PairingData>("/api/pairings", { key, template });
+  toast(pair.message ?? "saved");
+  renderPairings();
+  await load(); // the cards of the library show the mapping
+}
+function rowSelects(row: HTMLElement): { patch: HTMLSelectElement; map: HTMLSelectElement } {
+  return { patch: row.querySelector<HTMLSelectElement>(".pair-patch")!, map: row.querySelector<HTMLSelectElement>(".pair-map")! };
+}
+$("pair-table").addEventListener("change", (e) => {
+  const select = e.target as HTMLSelectElement;
+  const row = select.closest<HTMLElement>("tr[data-key]");
+  if (!row || !pair) return;
+  const key = row.dataset.key ?? "";
+  const { patch, map } = rowSelects(row);
+  if (key === "") {
+    // A row that is not saved yet: choosing a registration proposes its suggested mapping.
+    if (select === patch && patch.value && !map.value && pair.suggestions[patch.value]) map.value = pair.suggestions[patch.value].template;
+    return;
+  }
+  if (select === map) savePair(key, map.value || null).catch(() => {});
+  else if (patch.value && patch.value !== key) {
+    const template = map.value;
+    savePair(patch.value, template).then(() => savePair(key, null)).catch(() => {});
+  }
+});
+$("pair-table").addEventListener("click", (e) => {
+  const button = (e.target as Element).closest<HTMLElement>("button[data-act]");
+  const row = button?.closest<HTMLElement>("tr[data-key]");
+  if (!button || !row) return;
+  const key = row.dataset.key ?? "";
+  const act = button.dataset.act;
+  if (act === "remove") {
+    if (key === "") {
+      drafts = Math.max(0, drafts - 1);
+      renderPairings();
+    } else savePair(key, null).catch(() => {});
+  } else if (act === "use") savePair(key, button.dataset.template ?? null).catch(() => {});
+  else if (act === "save") {
+    const { patch, map } = rowSelects(row);
+    if (!patch.value || !map.value) {
+      toast("choose a registration and a mapping first", true);
+      return;
+    }
+    drafts = Math.max(0, drafts - 1);
+    savePair(patch.value, map.value).catch(() => {});
+  }
+});
+$("pair-add").addEventListener("click", () => {
+  drafts += 1;
+  renderPairings();
+});
+function suggestPairings(which: "unpaired" | "all"): void {
+  post<PairingData>("/api/pairings", { suggest: which })
+    .then((data) => {
+      pair = data;
+      toast(data.message ?? "paired");
+      renderPairings();
+      return load();
+    })
+    .catch(() => {});
+}
+$("pair-suggest").addEventListener("click", () => suggestPairings("unpaired"));
+$("pair-redo").addEventListener("click", () => {
+  if (confirm("Replace the mapping of every patch, including the ones chosen by hand, by the one suggested from its sounds?")) suggestPairings("all");
+});
+
 // Events -------------------------------------------------------------------------------------------
 library.addEventListener("click", (e) => {
   const button = (e.target as Element).closest<HTMLElement>("button[data-act]");
@@ -319,18 +457,19 @@ items.addEventListener("click", (e) => {
 $("clear").addEventListener("click", () => saveSetlist([]).catch(() => {}));
 $("reload").addEventListener("click", () => load().then(() => toast("reloaded")));
 
-function show(tab: "library" | "setlist"): void {
-  const onSetlist = tab === "setlist";
-  library.hidden = onSetlist;
-  $("setlist").hidden = !onSetlist;
-  for (const id of ["q", "todo-label", "count"]) $(id).style.display = onSetlist ? "none" : "";
-  $("tab-library").classList.toggle("on", !onSetlist);
-  $("tab-setlist").classList.toggle("on", onSetlist);
-  history.replaceState(null, "", onSetlist ? "#setlist" : "#");
+function show(tab: "library" | "setlist" | "pairings"): void {
+  library.hidden = tab !== "library";
+  $("setlist").hidden = tab !== "setlist";
+  $("pairings").hidden = tab !== "pairings";
+  for (const id of ["q", "todo-label", "count"]) $(id).style.display = tab === "library" ? "" : "none";
+  for (const name of ["library", "setlist", "pairings"]) $(`tab-${name}`).classList.toggle("on", name === tab);
+  history.replaceState(null, "", tab === "library" ? "#" : `#${tab}`);
+  if (tab === "pairings") loadPairings().catch(() => toast("the pairings could not be loaded", true));
 }
 $("tab-library").addEventListener("click", () => show("library"));
 $("tab-setlist").addEventListener("click", () => show("setlist"));
+$("tab-pairings").addEventListener("click", () => show("pairings"));
 q.addEventListener("input", applyFilter);
 todo.addEventListener("change", applyFilter);
 
-load().then(() => show(location.hash === "#setlist" ? "setlist" : "library"));
+load().then(() => show(location.hash === "#setlist" ? "setlist" : location.hash === "#pairings" ? "pairings" : "library"));

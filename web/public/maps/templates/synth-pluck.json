@@ -2,7 +2,7 @@
  "name": "synth-pluck",
  "patch_type": "synth pluck",
  "summary": "Plucked sounds: decay and release are short and shaped together.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC17",
  "axes": [
   {
    "axis": 16,
@@ -78,5 +78,14 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "upper-synth-cutoff"
+ ],
+ "untested_targets": [
+  "cc-upper-reverb"
+ ],
+ "dead_axes": [
+  17
  ]
 }

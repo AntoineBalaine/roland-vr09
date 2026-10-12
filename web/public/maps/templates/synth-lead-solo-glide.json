@@ -2,7 +2,7 @@
  "name": "synth-lead-solo-glide",
  "patch_type": "synth lead",
  "summary": "For a mono lead with portamento on: glide time and vibrato are under the fingers.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC16, CC17",
  "axes": [
   {
    "axis": 16,
@@ -68,5 +68,17 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "upper-synth-cutoff",
+  "upper-synth-portamento"
+ ],
+ "untested_targets": [
+  "cc-upper-reverb",
+  "cc-upper-vibrato-depth"
+ ],
+ "dead_axes": [
+  16,
+  17
  ]
 }

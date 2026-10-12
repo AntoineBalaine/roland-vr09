@@ -2,7 +2,7 @@
  "name": "organ-full-to-flute",
  "patch_type": "organ",
  "summary": "Tone crossfades from a full registration to a flute-like one.",
- "status": "proposal, untested",
+ "status": "every target verified",
  "axes": [
   {
    "axis": 16,
@@ -98,5 +98,8 @@
     }
    ]
   }
- ]
+ ],
+ "unavailable_targets": [],
+ "untested_targets": [],
+ "dead_axes": []
 }

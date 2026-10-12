@@ -2,7 +2,7 @@
  "name": "organ-rotary-morph",
  "patch_type": "organ",
  "summary": "All four axes shape the rotary speaker instead of the tone.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC19",
  "axes": [
   {
    "axis": 16,
@@ -98,5 +98,12 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "rotary-brake"
+ ],
+ "untested_targets": [],
+ "dead_axes": [
+  19
  ]
 }

@@ -38,6 +38,22 @@
   @media (max-width: 640px) { .trow { grid-template-columns: 1fr 1fr 1fr; } .trow label:first-child { grid-column: 1 / -1; } }
   pre { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin: 6px 0; max-height: 220px; overflow: auto; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
   textarea { width: 100%; min-height: 120px; font-family: ui-monospace, monospace; font-size: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 8px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; } tr[data-id] { cursor: pointer; } tr[data-id]:hover { background: var(--bg); }
+  .scene-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .scene-grid { grid-template-columns: 1fr; } }
+  .monitor { position: sticky; top: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .monitor h3 { margin: 0 0 4px; font-size: 15px; } .monitor .axis-live { margin: 10px 0; }
+  .monitor .sent { display: flex; gap: 8px; align-items: center; font-size: 13px; margin: 3px 0 0 16px; }
+  .monitor .sent .name { flex: 0 0 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .monitor .sent .fill { background: var(--ok, #2e9d5b); } .monitor .sent.off { opacity: .5; }
+  #scene-table, #tone-table { max-height: 560px; overflow: auto; }
+  #tone-table tr.current td { background: var(--bg); font-weight: 600; } #tone-table td.load { width: 1%; white-space: nowrap; }
+  button.on { outline: 2px solid var(--accent); }
+  .monitor .axis-name { margin-bottom: 2px; } .monitor .axis-name .what { color: var(--accent); }
+  .monitor .sent button { padding: 1px 6px; font-size: 12px; } .monitor .sent .heard { font-size: 12px; } #scene-table select { width: 100%; }
+  #scene-table tr.current td { background: var(--bg); font-weight: 600; } #scene-table td.load { width: 1%; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -61,13 +77,7 @@
   </section>
 
   <section>
-    <h2>3. Touché monitor</h2>
-    <div id="meters"></div>
-    <div class="row"><span>Buttons: <b id="buttons">none yet</b></span><span class="muted">Messages per second: <b id="rate">0</b></span></div>
-  </section>
-
-  <section>
-    <h2>4. VR-09 probe (read only)</h2>
+    <h2>3. VR-09 probe (read only)</h2>
     <div class="row">
       <button id="identity">Identity request</button>
       <button id="read-drawbars">Read upper drawbars</button>
@@ -76,7 +86,7 @@
   </section>
 
   <section>
-    <h2>5. CC out test</h2>
+    <h2>4. CC out test</h2>
     <p class="muted">Because the VR-09 documents some CCs but none was ever tested live, this panel sends one CC and, with "Send and compare", reads
       the VR-09's state before and after, so the result does not depend on hearing a change. The channels are those of MIDI IN Mode 2.</p>
     <div class="row">
@@ -92,7 +102,96 @@
   </section>
 
   <section>
-    <h2>6. Remap preset</h2>
+    <h2>5. Target test</h2>
+    <p class="muted">Pick one target of the catalog, set a value and check that the VR-09 took it. For a parameter address, "Send and check" reads the
+      address before and after the write, so the result does not depend on hearing a change; for a CC it compares the VR-09's state before and after,
+      as section 5 does. Click a row of the table to select its target. Results are kept in <code>library/target-tests.json</code>. Stop the bridge first.</p>
+    <div class="row">
+      <label><span>Target</span><select id="target-select"></select></label>
+    </div>
+    <div class="row">
+      <label><span>Value</span><input id="target-value" type="range" min="0" max="127" value="64"> <b id="target-value-text">64</b></label>
+      <label><input id="target-restore" type="checkbox" checked> put the original value back afterwards (parameter addresses only)</label>
+    </div>
+    <div class="row">
+      <button id="target-send">Send once</button>
+      <button id="target-test" class="primary">Send and check</button>
+      <button id="target-heard">I heard a change</button>
+      <button id="target-silent">I heard nothing</button>
+    </div>
+    <div class="row">
+      <button id="target-sweep" class="primary">Sweep and listen</button>
+      <label><span style="min-width:0">over</span> <input id="sweep-seconds" type="number" min="1" max="20" value="3" style="width:64px"> seconds, low to high and back</label>
+      <label><input id="sweep-chord" type="checkbox" checked> play a chord meanwhile</label>
+    </div>
+    <div class="row">
+      <button id="test-all">Check every parameter address</button>
+      <span class="muted">Writes each one a different value, reads it back, and puts the original back.</span>
+    </div>
+    <pre id="target-result">Nothing tested yet.</pre>
+    <div id="test-table"></div>
+    <div class="row">
+      <button id="tests-json">Show results JSON</button>
+      <button id="tests-clear">Clear results</button>
+    </div>
+    <textarea id="tests-text" placeholder="The results JSON appears here."></textarea>
+  </section>
+
+  <section>
+    <h2>6. Scenes and single tones</h2>
+    <div class="row">
+      <button id="show-scenes" class="on">Registrations</button>
+      <button id="show-tones">Single tones</button>
+    </div>
+    <div id="tone-controls" hidden>
+      <p class="muted">A single tone is one tone of the VR-09's tone list, played alone on the upper synth or the upper piano, with
+        all its sound-shaping values at their neutral setting. Choose a tone category, a mapping (what each Touché axis controls),
+        and click Load on a tone. Then hold a note, move each axis, and click "works" or "no effect" on that axis in the monitor
+        on the right. The answers are kept in <code>library/target-tests.json</code>.</p>
+      <div class="row">
+        <label><span>Tone category</span><select id="tone-group"></select></label>
+      </div>
+      <div class="row">
+        <label><span>Mapping</span><select id="tone-mapping" style="min-width:520px"></select></label>
+      </div>
+    </div>
+    <div id="scene-controls">
+    <p class="muted">A scene is a registration of the library paired with a Touché mapping. "Load" on a row writes the registration to the VR-09, loads the mapping into section 7 and starts
+      the bridge, so you can play and feel the Touché at once. The registration is written as live values, about half a second of
+      messages; pressing its Registration button on the keyboard's panel puts the keyboard's own copy back. Changing a row's mapping
+      saves the pairing in the catalog, as the Pairings tab of the library page does.</p>
+    <div class="row">
+      <button id="scene-prev">Previous</button>
+      <button id="scene-next">Next</button>
+      <input id="scene-filter" type="search" placeholder="Filter by registration or mapping" style="flex:1 1 220px">
+      <button id="scene-reload">Reload the pairings</button>
+    </div>
+    <div class="row">
+      <label><input id="scene-recall" type="checkbox" checked> write the registration to the VR-09</label>
+      <label><input id="scene-mapping" type="checkbox" checked> load the mapping</label>
+      <label><input id="scene-start" type="checkbox" checked> start the bridge</label>
+    </div>
+    <div class="row">
+      <label><input id="scene-buttons" type="checkbox"> the Touché's left and right buttons (CC80, CC81) step through the scenes</label>
+      <span class="muted">In standalone mode the same buttons also change the Touché's own preset (the LED colour is its bank), which can change the CCs it sends.</span>
+    </div>
+    </div>
+    <pre id="scene-status">Loading the pairings...</pre>
+    <div class="scene-grid">
+      <div><div id="scene-table"></div><div id="tone-table" hidden></div></div>
+      <div class="monitor">
+        <h3>Touché to VR-09</h3>
+        <p class="muted">For each Touché axis: the keyboard parameter it controls, the value the Touché sends (0 to 127), and the
+          last value sent to the keyboard.</p>
+        <div id="meters"></div>
+        <div class="row"><span>Buttons: <b id="buttons">none yet</b></span><span class="muted">Touché messages per second: <b id="rate">0</b></span></div>
+        <div class="row"><span class="muted">Other messages from the Touché: <b id="other-cc">none</b></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>7. Remap preset</h2>
     <p class="muted">Each of the four axes can drive several VR-09 targets at once, each over its own range, window of the axis travel and curve.
       A range may descend (low above high) to invert. Targets are grouped by how much we trust them: "verified" were written alone on the unit,
       "recalled" changed when a dump was recalled, "documented" are only in Roland's document.</p>
@@ -118,7 +217,7 @@
   </section>
 
   <section>
-    <h2>7. Bridge</h2>
+    <h2>8. Bridge</h2>
     <p class="bad">While the bridge runs, moving an axis writes to the VR-09's current sound. It does not change the saved Registrations.</p>
     <div class="row"><button id="bridge">Start bridge</button><span class="muted">Sent: <b id="sent">0</b> messages</span></div>
     <pre id="log"></pre>
@@ -128,9 +227,10 @@
 <script>
 const AXES = [16, 17, 18, 19];
 const AXIS_ROLES = { 16: "body", 17: "tone", 18: "modulation", 19: "effects" };
+const RECALL_GAP_MS = 3;  // The gap between the messages of a recall; 2 ms worked in every test with vr09.py.
 const SEND_GAP_MS = 5;  // The unit overflows its buffer with no gap, and gaps of 1 to 20 ms all worked.
-const STATUS_ORDER = ["verified", "recalled", "documented"];
-const STATUS_LABELS = { verified: "Verified on the unit", recalled: "Changes with a dump recall", documented: "Documented only" };
+const STATUS_ORDER = ["verified", "recalled", "documented", "unavailable"];
+const STATUS_LABELS = { verified: "Verified on the unit", recalled: "Changes with a dump recall", documented: "Documented only", unavailable: "Unavailable: this unit refuses it" };
 
 // The blocks read before and after a CC, with the addresses and sizes that vr09.py uses.
 const BLOCKS = [
@@ -154,6 +254,10 @@ const ctx = {
   targets: [], targetMap: {}, templates: [], targetOptions: "",
   preset: null, running: false, pending: new Map(), lastSent: new Map(), sentCount: 0,
   messageCount: 0, probeUntil: 0, logLines: [],
+  outbox: [], flushing: false, logWindow: 0, logCount: 0, logDropped: 0,  // The lines waiting to be sent to the server.
+  scenes: { order: [], titles: {}, pairings: {}, templates: [] }, sceneKey: "", loading: false,
+  tones: [], toneIndex: -1, toneTemplates: {},  // Roland's tone list, and the tone loaded alone.  // The pairings of the library.
+  tests: {}, testing: false, lastTested: null,  // The results of the target test, keyed by target id.
   collect: null,  // While a Map, every DT1 that arrives from the VR-09 is stored in it, keyed by address.
 };
 
@@ -188,6 +292,50 @@ function log(text) {
   if (ctx.logLines.length > 60) ctx.logLines.shift();
   $("log").textContent = ctx.logLines.join("\n");
   $("log").scrollTop = $("log").scrollHeight;
+  remoteLog("bridge", text);
+}
+
+// ---------- live log ----------
+// Every step is also sent to the server, which appends it to library/page-log.jsonl, so that someone watching that file
+// (for example Claude, through tail) sees the steps as they happen. A moving axis writes hundreds of lines a second, so
+// more than 25 a second are counted and dropped.
+
+const LOG_PER_SECOND = 25;
+
+function remoteLog(kind, text) {
+  const now = Date.now();
+  if (now - ctx.logWindow > 1000) {
+    if (ctx.logDropped > 0) ctx.outbox.push({ t: now, kind: "log", text: `${ctx.logDropped} lines dropped in the last second` });
+    ctx.logWindow = now;
+    ctx.logCount = 0;
+    ctx.logDropped = 0;
+  }
+  if (ctx.logCount >= LOG_PER_SECOND) { ctx.logDropped += 1; return; }
+  ctx.logCount += 1;
+  ctx.outbox.push({ t: now, kind: kind, text: String(text) });
+  if (!ctx.flushing) {
+    ctx.flushing = true;
+    setTimeout(flushLog, 200);
+  }
+}
+
+async function flushLog() {
+  const events = ctx.outbox.splice(0, ctx.outbox.length);
+  ctx.flushing = false;
+  if (events.length === 0) return;
+  try {
+    await fetch("/api/page-log", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ events: events }), keepalive: true });
+  } catch (error) {
+    // The live log is a convenience: a lost line must never disturb a test.
+  }
+}
+
+function onWindowError(event) {
+  remoteLog("error", `${event.message} (${event.filename}:${event.lineno})`);
+}
+
+function onRejection(event) {
+  remoteLog("error", `unhandled rejection: ${event.reason && event.reason.message ? event.reason.message : event.reason}`);
 }
 
 // Because the options of a select are built in several places, one helper builds them all.
@@ -231,7 +379,8 @@ function targetOptionsFor(selected) {
 }
 
 function templateLabel(item) {
-  return `${item.name} (${item.patch_type})`;
+  const dead = item.dead_axes && item.dead_axes.length ? `, needs rework: ${item.dead_axes.length} axis without a working target` : "";
+  return `${item.name} (${item.patch_type}${dead})`;
 }
 
 async function loadCatalog() {
@@ -242,9 +391,12 @@ async function loadCatalog() {
     for (const target of targets) ctx.targetMap[target.id] = target;
     ctx.templates = templates;
     buildTargetOptions();
+    $("target-select").innerHTML = ctx.targetOptions;
+    onTargetSelect();
     $("template-list").innerHTML = optionsHtml(templates.map(nameOf), templates.map(templateLabel), undefined);
-    $("catalog-status").innerHTML = `<span class="ok">${targets.length} targets and ${templates.length} templates loaded.</span> Every template is an untested proposal.`;
+    $("catalog-status").innerHTML = `<span class="ok">${targets.length} targets and ${templates.length} templates loaded.</span> Templates marked "needs rework" have an axis whose targets this unit refuses.`;
     onTemplateSelect();
+    await loadTests();
   } catch (error) {
     $("catalog-status").innerHTML = `<span class="bad">The catalog could not be loaded (${error.message}). Run tools/make_templates.py.</span>`;
   }
@@ -252,7 +404,7 @@ async function loadCatalog() {
 
 function onTemplateSelect() {
   for (const item of ctx.templates) {
-    if (item.name === $("template-list").value) $("template-summary").textContent = item.summary;
+    if (item.name === $("template-list").value) $("template-summary").textContent = `${item.summary} [${item.status || "untested"}]`;
   }
 }
 
@@ -328,6 +480,7 @@ function renderAxes() {
   let html = "";
   for (const row of ctx.preset.axes) html += axisHtml(row);
   $("axes").innerHTML = html;
+  renderMeters();
 }
 
 function axisRow(cc) {
@@ -428,21 +581,23 @@ function messageFor(target, value) {
 // Because a message is sent only when the quantised value changes, a slow axis sends far fewer messages than it receives.
 function mapEntry(entry, raw) {
   const target = ctx.targetMap[entry.target];
-  if (!target) return;
+  if (!target || target.status === "unavailable") return;  // The unit refuses these writes, so nothing is sent.
   const start = entry.window[0], end = entry.window[1];
   let x = end > start ? (raw - start) / (end - start) : (raw >= start ? 1 : 0);
   x = curved(Math.max(0, Math.min(1, x)), entry.curve);
   const value = clampValue(Math.round(entry.low + x * (entry.high - entry.low)), target);
   if (ctx.lastSent.get(target.id) === value) return;
   ctx.lastSent.set(target.id, value);
-  ctx.pending.set(target.id, messageFor(target, value));
+  ctx.pending.set(target.id, { message: messageFor(target, value), value: value });
 }
 
 function drainOne() {
   if (!ctx.running || !ctx.vr09Out || ctx.pending.size === 0) return;
-  const [key, message] = ctx.pending.entries().next().value;
+  const [key, item] = ctx.pending.entries().next().value;
+  const message = item.message;
   ctx.pending.delete(key);
   ctx.vr09Out.send(message);
+  showSent(key, item.value);
   ctx.sentCount += 1;
   $("sent").textContent = ctx.sentCount;
   log(`${key} -> ${hex(message)}`);
@@ -452,6 +607,7 @@ function onBridgeToggle() {
   ctx.running = !ctx.running;
   $("bridge").textContent = ctx.running ? "Stop bridge" : "Start bridge";
   $("bridge").classList.toggle("on", ctx.running);
+  remoteLog("bridge", ctx.running ? "bridge started" : "bridge stopped");
   ctx.lastSent.clear();
   ctx.pending.clear();
   if (ctx.running && !ctx.vr09Out) log("No VR-09 output is selected, so nothing will be sent.");
@@ -459,20 +615,74 @@ function onBridgeToggle() {
 
 // ---------- incoming MIDI ----------
 
+// One block per axis: the Touché's value, then one line per target with the value last sent and the target's range.
 function renderMeters() {
   let html = "";
   for (const cc of AXES) {
-    html += `<div class="row"><span style="min-width:64px">CC${cc}</span>
-    <div class="meter"><div class="track"><div class="fill" id="fill-${cc}"></div></div></div><b id="val-${cc}">0</b></div>`;
+    const row = ctx.preset ? axisRow(cc) : undefined;
+    const names = [];
+    if (row) for (const entry of row.targets) names.push(ctx.targetMap[entry.target] ? ctx.targetMap[entry.target].label : entry.target);
+    html += `<div class="axis-live"><div class="axis-name"><b>CC${cc}</b> <span class="muted">(${AXIS_ROLES[cc]})</span> controls
+      <b class="what">${names.length ? escapeHtml(names.join(", ")) : "nothing"}</b></div>
+    <div class="row"><span class="muted" style="min-width:90px">Touché sends</span>
+    <div class="meter"><div class="track"><div class="fill" id="fill-${cc}"></div></div></div><b id="val-${cc}">${ctx.values[cc] || 0}</b></div>`;
+    if (row) for (const entry of row.targets) {
+      const target = ctx.targetMap[entry.target];
+      const dead = !target || target.status === "unavailable";
+      html += `<div class="sent${dead ? " off" : ""}" data-target="${entry.target}"><span class="name" title="${entry.target}">${target ? target.label || entry.target : entry.target}</span>
+        <div class="meter"><div class="track"><div class="fill"></div></div></div><b class="value">${dead ? "refused by the unit" : "-"}</b>
+        <span class="muted">${entry.low} to ${entry.high}</span>${heardHtml(entry.target)}</div>`;
+    }
+    html += "</div>";
   }
   $("meters").innerHTML = html;
 }
 
+// Because only an ear can tell whether a control changes the sound, every line of the monitor can be marked.
+function heardHtml(id) {
+  const result = ctx.tests[id];
+  const state = result && result.heard !== undefined ? (result.heard ? "works" : "no effect") : "not judged";
+  return ` <button data-heard="yes">works</button><button data-heard="no">no effect</button> <span class="heard muted">${state}</span>`;
+}
+
+async function onMeterClick(event) {
+  const button = event.target.closest("button[data-heard]");
+  const line = button ? button.closest(".sent[data-target]") : null;
+  if (!line) return;
+  const id = line.dataset.target;
+  const target = ctx.targetMap[id];
+  const heard = button.dataset.heard === "yes";
+  const result = Object.assign({ kind: target.kind, label: target.label }, ctx.tests[id], { heard: heard, at: new Date().toISOString() });
+  const tone = findTone(ctx.toneIndex);
+  if (tone) result.heard_on = `${tone.name} (${tone.section}, ${tone.group})`;
+  await storeResult(id, result);
+  remoteLog("heard", `${id}: ${heard ? "works" : "no effect"}${tone ? ` on ${tone.name}` : ""}`);
+  for (const span of document.querySelectorAll(`#meters .sent[data-target="${id}"] .heard`)) span.textContent = heard ? "works" : "no effect";
+}
+
+// Called for every message really sent, so the display shows what the keyboard received, not what was computed.
+function showSent(id, value) {
+  for (const line of document.querySelectorAll(`#meters .sent[data-target="${id}"]`)) {
+    const target = ctx.targetMap[id];
+    const lowest = Math.min(target.low, target.high), highest = Math.max(target.low, target.high);
+    line.querySelector(".fill").style.width = `${highest > lowest ? ((value - lowest) / (highest - lowest)) * 100 : 0}%`;
+    line.querySelector(".value").textContent = value;
+  }
+}
+
+// The Touché's internal preset decides which CCs it sends; a preset that sends other CCs, or another channel,
+// shows up here, because the mappings only listen to CC16 to CC19 on channel 1.
+function showOther(data) {
+  const kind = (data[0] & 0xF0) === 0xB0 ? `CC${data[1]} = ${data[2]}` : hex(data);
+  $("other-cc").textContent = `${kind} on channel ${(data[0] & 0x0F) + 1}`;
+}
+
 function onToucheMessage(data) {
   const status = data[0] & 0xF0;
-  if (status !== 0xB0) return;
+  if (status !== 0xB0) { if (data[0] < 0xF0) showOther(data); return; }
   const cc = data[1], value = data[2];
   ctx.messageCount += 1;
+  if ((data[0] & 0x0F) !== 0 && cc !== 80 && cc !== 81) { showOther(data); return; }
   if (AXES.includes(cc)) {
     ctx.values[cc] = value;
     $(`fill-${cc}`).style.width = `${(value / 127) * 100}%`;
@@ -481,7 +691,9 @@ function onToucheMessage(data) {
     if (ctx.running && row) for (const entry of row.targets) mapEntry(entry, value);
   } else if (cc === 80 || cc === 81) {
     $("buttons").textContent = `${cc === 80 ? "left" : "right"} (CC${cc}) = ${value}`;
-  }
+    // A press sends 0 and, about 120 ms later, 127: only the 127 steps the scene, so a press counts once.
+    if (value === 127 && $("scene-buttons").checked) stepScene(cc === 81 ? 1 : -1);
+  } else showOther(data);
 }
 
 function packedAddress(bytes) {
@@ -500,6 +712,7 @@ function onVr09Message(data) {
   if (data[0] >= 0xF8) return;  // Clock and active sensing arrive constantly and carry no information.
   if (ctx.collect) storeDt1(data);
   if (performance.now() < ctx.probeUntil) {
+    remoteLog("probe", `reply ${hex(data)}`);
     $("probe").textContent += `\nreply: ${hex(data)}`;
     if (data[0] === 0xF0 && data[4] === 0x12) {
       const values = data.slice(8, data.length - 2);
@@ -542,6 +755,7 @@ function applyPorts() {
   ctx.toucheIn = chooseInput($("touche-in"), ctx.access.inputs, ctx.toucheIn);
   ctx.vr09In = chooseInput($("vr09-in"), ctx.access.inputs, ctx.vr09In);
   ctx.vr09Out = ctx.access.outputs.get($("vr09-out").value) || null;
+  remoteLog("ports", `touche input: ${ctx.toucheIn ? ctx.toucheIn.name : "none"}; vr09 input: ${ctx.vr09In ? ctx.vr09In.name : "none"}; vr09 output: ${ctx.vr09Out ? ctx.vr09Out.name : "none"}`);
 }
 
 function refreshPorts() {
@@ -561,17 +775,20 @@ async function onConnect() {
     ctx.access = await navigator.requestMIDIAccess({ sysex: true });
   } catch (error) {
     $("support").innerHTML = `<span class="bad">MIDI access was refused: ${error.message}</span>`;
+    remoteLog("connect", `MIDI access was refused: ${error.message}`);
     return;
   }
   ctx.access.onstatechange = refreshPorts;
   refreshPorts();
   $("support").innerHTML = '<span class="ok">MIDI access granted, with SysEx.</span>';
+  remoteLog("connect", "MIDI access granted, with SysEx");
 }
 
 function onProbe(message) {
   if (!ctx.vr09Out) { $("probe").textContent = "No VR-09 output is selected."; return; }
   ctx.probeUntil = performance.now() + 1500;
   $("probe").textContent = `sent: ${hex(message)}`;
+  remoteLog("probe", `sent ${hex(message)}`);
   ctx.vr09Out.send(message);
 }
 
@@ -642,6 +859,7 @@ function onCcSend() {
 async function onCcCompare() {
   if (!ctx.vr09Out || !ctx.vr09In) { $("cc-result").textContent = "Both the VR-09 input and output must be selected."; return; }
   const message = ccMessage();
+  remoteLog("cc-test", `sending ${message.text}`);
   $("cc-result").textContent = "Reading the state before...";
   const before = await snapshot();
   ctx.vr09Out.send(message.bytes);
@@ -652,6 +870,7 @@ async function onCcCompare() {
   const header = `sent ${hex(message.bytes)} (${message.text}); read ${before.size} bytes before and ${after.size} after`;
   const verdict = before.size === 0 ? "No reply from the VR-09: check the input port and MIDI IN Mode 2." : (changes.length ? `${changes.length} parameter(s) changed:` : "No parameter changed. Either the CC is ignored, or it only affects the sound without touching these blocks.");
   $("cc-result").textContent = [header, verdict, ...changes].join("\n");
+  remoteLog("cc-test", [header, verdict, ...changes].join(" | "));
 }
 
 function labelOfCc(pair) {
@@ -668,6 +887,640 @@ function onCcValue() {
   $("cc-value-text").textContent = $("cc-value").value;
 }
 
+// ---------- target test ----------
+
+const TEST_STORE = "touche-bridge-target-tests-v1";
+
+function whereText(target) {
+  if (target.kind === "cc") return `channel ${target.channel}, CC${target.cc}`;
+  return `address ${addressText(packedAddress(target.address))}`;
+}
+
+function selectedTarget() {
+  return ctx.targetMap[$("target-select").value];
+}
+
+// Because the slider must stay inside the target's range, which may be given from high to low, it is reset whenever the target changes.
+function onTargetSelect() {
+  const target = selectedTarget();
+  if (!target) return;
+  const lowest = Math.min(target.low, target.high), highest = Math.max(target.low, target.high);
+  $("target-value").min = lowest;
+  $("target-value").max = highest;
+  $("target-value").value = Math.round((lowest + highest) / 2);
+  onTargetValue();
+}
+
+function onTargetValue() {
+  $("target-value-text").textContent = $("target-value").value;
+}
+
+function portsReady() {
+  const out = $("target-result");
+  if (ctx.running) { out.textContent = "Stop the bridge first."; return false; }
+  if (!ctx.vr09Out || !ctx.vr09In) { out.textContent = "Both the VR-09 input and output must be selected (section 2)."; return false; }
+  if (ctx.testing) { out.textContent = "A test is already running."; return false; }
+  return true;
+}
+
+// Because the unit answers an RQ1 with a DT1 for the same address, the answer is collected in the Map and read from there.
+async function readByte(address) {
+  const state = new Map();
+  ctx.collect = state;
+  ctx.vr09Out.send(rq1(address, 1));
+  await sleep(150);
+  ctx.collect = null;
+  const value = state.get(packedAddress(address));
+  remoteLog("read", `${addressText(packedAddress(address))} = ${value === undefined ? "no reply" : value}`);
+  return value;
+}
+
+async function checkAddress(target, value, restore, known) {
+  const original = known === undefined ? await readByte(target.address) : known;
+  if (original === undefined) return { kind: "dt1", sent: value, verdict: "no reply from the VR-09" };
+  remoteLog("write", `${hex(dt1(target.address, value))} (${target.id} = ${value}, it was ${original})`);
+  ctx.vr09Out.send(dt1(target.address, value));
+  await sleep(100);
+  const readback = await readByte(target.address);
+  let restored = null;
+  if (restore) {
+    remoteLog("write", `${hex(dt1(target.address, original))} (${target.id} back to ${original})`);
+    ctx.vr09Out.send(dt1(target.address, original));
+    await sleep(100);
+    restored = (await readByte(target.address)) === original;
+  }
+  let verdict;
+  if (readback === undefined) verdict = "no reply after the write";
+  else if (readback === value && value === original) verdict = "unchanged (the value it already had)";
+  else if (readback === value) verdict = "accepted";
+  else if (readback === original) verdict = "refused: the value did not change";
+  else verdict = `changed to a different value (${readback})`;
+  return { kind: "dt1", original, sent: value, readback, restored, verdict };
+}
+
+async function checkCc(target, value) {
+  const bytes = [0xB0 | (target.channel - 1), target.cc, value];
+  remoteLog("read", `reading the state before ${target.id}`);
+  const before = await snapshot();
+  remoteLog("write", `${hex(bytes)} (${target.id} = ${value})`);
+  ctx.vr09Out.send(bytes);
+  await sleep(300);
+  remoteLog("read", "reading the state after");
+  const after = await snapshot();
+  const changes = diffText(before, after);
+  let verdict = changes.length ? `${changes.length} stored parameter(s) changed` : "no stored parameter changed (a change only in the sound engine needs listening)";
+  if (before.size === 0) verdict = "no reply from the VR-09";
+  return { kind: "cc", sent: value, changes: changes.slice(0, 12), verdict };
+}
+
+function describeResult(target, result) {
+  const lines = [`${target.label} (${whereText(target)})`];
+  if (result.kind === "dt1") {
+    lines.push(`original ${result.original}, sent ${result.sent}, read back ${result.readback}` + (result.restored === null ? "" : `, original put back: ${result.restored}`));
+  } else {
+    lines.push(`sent ${result.sent}`);
+    for (const change of result.changes || []) lines.push(change);
+  }
+  lines.push(`verdict: ${result.verdict}`);
+  return lines.join("\n");
+}
+
+// ---------- target test: results ----------
+
+async function loadTests() {
+  try {
+    ctx.tests = JSON.parse(localStorage.getItem(TEST_STORE) || "{}");
+  } catch (error) {
+    ctx.tests = {};
+  }
+  try {
+    const stored = await (await fetch("/api/target-tests")).json();
+    for (const id of Object.keys(stored)) ctx.tests[id] = stored[id];
+  } catch (error) {
+    log(`The saved test results could not be read from the server: ${error.message}`);
+  }
+  renderTestTable();
+}
+
+async function storeResult(id, result) {
+  ctx.tests[id] = result;
+  try {
+    localStorage.setItem(TEST_STORE, JSON.stringify(ctx.tests));
+  } catch (error) {
+    log("Browser storage is unavailable; the server keeps the results.");
+  }
+  try {
+    await fetch("/api/target-tests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: id, result: result }) });
+  } catch (error) {
+    log(`The result could not be saved on the server: ${error.message}`);
+  }
+  renderTestTable();
+}
+
+function renderTestTable() {
+  let html = "<table><tr><th>Target</th><th>Where</th><th>Catalog</th><th>Check</th><th>Heard</th></tr>";
+  for (const target of ctx.targets) {
+    const result = ctx.tests[target.id];
+    const heard = result === undefined || result.heard === undefined ? "" : (result.heard ? "yes" : "no");
+    html += `<tr data-id="${target.id}"><td>${target.label}</td><td>${whereText(target)}</td><td>${target.status}</td>` +
+      `<td>${result === undefined || !result.verdict ? "not tested" : result.verdict}</td><td>${heard}</td></tr>`;
+  }
+  $("test-table").innerHTML = html + "</table>";
+}
+
+function onTestTableClick(event) {
+  const row = event.target.closest("tr");
+  if (!row || !row.dataset.id) return;
+  $("target-select").value = row.dataset.id;
+  onTargetSelect();
+}
+
+// ---------- target test: buttons ----------
+
+function onTargetSend() {
+  const target = selectedTarget();
+  if (!target) return;
+  if (!ctx.vr09Out) { $("target-result").textContent = "No VR-09 output is selected."; return; }
+  const message = messageFor(target, Number($("target-value").value));
+  ctx.vr09Out.send(message);
+  ctx.lastTested = target.id;
+  remoteLog("write", `${hex(message)} (${target.id}, value ${$("target-value").value}, no check)`);
+  $("target-result").textContent = `sent ${hex(message)} (${target.label}, ${whereText(target)}, value ${$("target-value").value}).\nListen, then say what you heard.`;
+}
+
+async function onTargetTest() {
+  if (!portsReady()) return;
+  const target = selectedTarget();
+  if (!target) return;
+  const value = Number($("target-value").value);
+  ctx.testing = true;
+  remoteLog("test", `checking ${target.id} (${target.kind}, ${whereText(target)}) with value ${value}`);
+  $("target-result").textContent = `Checking ${target.label}...`;
+  try {
+    const result = target.kind === "cc" ? await checkCc(target, value) : await checkAddress(target, value, $("target-restore").checked);
+    const previous = ctx.tests[target.id];
+    result.label = target.label;
+    result.at = new Date().toISOString();
+    if (previous && previous.heard !== undefined) result.heard = previous.heard;
+    ctx.lastTested = target.id;
+    $("target-result").textContent = describeResult(target, result);
+    remoteLog("result", describeResult(target, result).split("\n").join(" | "));
+    await storeResult(target.id, result);
+  } catch (error) {
+    $("target-result").textContent = `The check failed: ${error.message}`;
+    remoteLog("error", `the check failed: ${error.message}`);
+  }
+  ctx.testing = false;
+}
+
+async function onHeard(heard) {
+  const id = ctx.lastTested || $("target-select").value;
+  const target = ctx.targetMap[id];
+  if (!target) return;
+  const result = Object.assign({ kind: target.kind, label: target.label }, ctx.tests[id], { heard: heard, at: new Date().toISOString() });
+  await storeResult(id, result);
+  remoteLog("heard", `${target.id}: ${heard ? "a change was heard" : "nothing was heard"}`);
+  $("target-result").textContent = `${target.label}: noted that you ${heard ? "heard a change" : "heard nothing"}.`;
+}
+
+function onHeardYes() {
+  return onHeard(true);
+}
+
+function onHeardNo() {
+  return onHeard(false);
+}
+
+// Because a sweep is meant to be heard, the page plays a chord itself on the part the target belongs to: C, E and G of the middle octave.
+function chordChannel(target) {
+  if (target.kind === "cc") return target.channel === 16 ? 3 : target.channel - 1;
+  const a = target.address;
+  const lower = (a[0] === 0x02 && a[1] === 0x01) || (a[0] === 0x01 && (a[1] === 0x11 || a[1] === 0x13));
+  return lower ? 2 : 3;
+}
+
+function sendChord(channel, on) {
+  for (const note of [60, 64, 67]) ctx.vr09Out.send(on ? [0x90 | channel, note, 90] : [0x80 | channel, note, 0]);
+}
+
+// The value goes from the lowest to the highest end of the target's range and back, over the chosen time. A parameter address gets
+// its original value back at the end; a CC cannot be read, so it stays at the low end until a value is sent.
+async function onSweep() {
+  if (!portsReady()) return;
+  const target = selectedTarget();
+  if (!target) return;
+  const seconds = Math.max(1, Math.min(20, Number($("sweep-seconds").value) || 3));
+  const lowest = Math.min(target.low, target.high), highest = Math.max(target.low, target.high);
+  const withChord = $("sweep-chord").checked;
+  const channel = chordChannel(target);
+  ctx.testing = true;
+  ctx.lastTested = target.id;
+  $("target-result").textContent = `Sweeping ${target.label} from ${lowest} to ${highest} and back over ${seconds} s. Listen.`;
+  remoteLog("sweep", `${target.id} (${whereText(target)}) from ${lowest} to ${highest} and back over ${seconds} s${withChord ? `, chord on channel ${channel + 1}` : ""}`);
+  try {
+    const original = target.kind === "dt1" ? await readByte(target.address) : undefined;
+    if (withChord) sendChord(channel, true);
+    const started = performance.now();
+    let last = null, messages = 0;
+    for (;;) {
+      const phase = (performance.now() - started) / (seconds * 1000);
+      if (phase >= 1) break;
+      const value = Math.round(lowest + (phase < 0.5 ? phase * 2 : (1 - phase) * 2) * (highest - lowest));
+      if (value !== last) {
+        ctx.vr09Out.send(messageFor(target, value));
+        last = value;
+        messages += 1;
+      }
+      await sleep(15);
+    }
+    if (withChord) sendChord(channel, false);
+    let ending = `left at ${lowest}`;
+    if (original !== undefined) {
+      ctx.vr09Out.send(dt1(target.address, original));
+      ending = `the original value ${original} is back`;
+    } else {
+      ctx.vr09Out.send(messageFor(target, lowest));  // The loop stops just before the end, so the CC is put exactly at the low end.
+    }
+    $("target-result").textContent = `Swept ${target.label}: ${messages} values sent, ${ending}.\nDid you hear a change? Use the buttons above to note it.`;
+    remoteLog("sweep", `done: ${messages} values sent, ${ending}`);
+  } catch (error) {
+    $("target-result").textContent = `The sweep failed: ${error.message}`;
+    remoteLog("error", `the sweep failed: ${error.message}`);
+  }
+  ctx.testing = false;
+}
+
+async function onTestAll() {
+  if (!portsReady()) return;
+  const list = [];
+  for (const target of ctx.targets) if (target.kind === "dt1") list.push(target);
+  ctx.testing = true;
+  remoteLog("test", `checking every parameter address (${list.length})`);
+  const counts = {};
+  try {
+    for (let i = 0; i < list.length; i++) {
+      const target = list[i];
+      $("target-result").textContent = `Checking ${i + 1} of ${list.length}: ${target.label}`;
+      const original = await readByte(target.address);
+      const lowest = Math.min(target.low, target.high), highest = Math.max(target.low, target.high);
+      const result = await checkAddress(target, original === highest ? lowest : highest, true, original);
+      const previous = ctx.tests[target.id];
+      result.label = target.label;
+      result.at = new Date().toISOString();
+      if (previous && previous.heard !== undefined) result.heard = previous.heard;
+      counts[result.verdict] = (counts[result.verdict] || 0) + 1;
+      remoteLog("result", `${i + 1}/${list.length} ${target.id}: ${result.verdict} (sent ${result.sent}, read back ${result.readback}, restored ${result.restored})`);
+      await storeResult(target.id, result);
+    }
+    const lines = [];
+    for (const verdict of Object.keys(counts)) lines.push(`  ${counts[verdict]} x ${verdict}`);
+    $("target-result").textContent = `Checked ${list.length} parameter addresses; each original value was put back.\n${lines.join("\n")}`;
+    remoteLog("result", `checked ${list.length} parameter addresses: ${lines.join("; ").split("  ").join("")}`);
+  } catch (error) {
+    $("target-result").textContent = `The check stopped: ${error.message}`;
+  }
+  ctx.testing = false;
+}
+
+function onTestsJson() {
+  $("tests-text").value = JSON.stringify(ctx.tests, null, 2);
+}
+
+async function onTestsClear() {
+  ctx.tests = {};
+  try { localStorage.removeItem(TEST_STORE); } catch (error) { /* nothing to remove */ }
+  try {
+    await fetch("/api/target-tests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clear: true }) });
+  } catch (error) {
+    log(`The saved results could not be cleared on the server: ${error.message}`);
+  }
+  renderTestTable();
+}
+
+// ---------- scenes ----------
+
+function sceneKeys() {
+  const keys = [];
+  for (const key of ctx.scenes.order) if (ctx.scenes.pairings[key]) keys.push(key);
+  return keys;
+}
+
+function escapeHtml(text) {
+  return String(text).split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;").split('"').join("&quot;");
+}
+
+function templateInfo(name) {
+  for (const info of ctx.scenes.templates) if (info.name === name) return info;
+  return null;
+}
+
+function templateText(info) {
+  const note = info.dead_axes.length ? " - needs rework" : (info.status.indexOf("partly") === 0 ? " - partly working" : "");
+  return `${info.name} (${info.patch_type})${note}`;
+}
+
+// Because Previous and Next walk the rows on screen, the filter decides which scenes they step through.
+function visibleSceneKeys() {
+  const words = $("scene-filter").value.toLowerCase().split(" ");
+  const keys = [];
+  for (const key of sceneKeys()) {
+    const text = `${ctx.scenes.titles[key] || key} ${ctx.scenes.pairings[key]} ${key}`.toLowerCase();
+    let shown = true;
+    for (const word of words) if (word && text.indexOf(word) < 0) shown = false;
+    if (shown) keys.push(key);
+  }
+  return keys;
+}
+
+function renderScenes() {
+  const names = [], labels = [];
+  for (const info of ctx.scenes.templates) { names.push(info.name); labels.push(escapeHtml(templateText(info))); }
+  let html = "<table><tr><th>Registration</th><th>Mapping</th><th>Status of the mapping</th><th></th></tr>";
+  for (const key of visibleSceneKeys()) {
+    const template = ctx.scenes.pairings[key];
+    const info = templateInfo(template);
+    const status = info ? info.status : "unknown mapping";
+    html += `<tr data-key="${escapeHtml(key)}"${key === ctx.sceneKey ? ' class="current"' : ""}>` +
+      `<td>${escapeHtml(ctx.scenes.titles[key] || key)}</td>` +
+      `<td><select class="scene-map">${optionsHtml(names, labels, template)}</select></td>` +
+      `<td class="${info && info.dead_axes.length ? "bad" : "muted"}">${escapeHtml(status)}</td>` +
+      `<td class="load"><button data-act="load" class="primary">Load</button></td></tr>`;
+  }
+  $("scene-table").innerHTML = html + "</table>";
+}
+
+function fillScenes() {
+  const keys = sceneKeys();
+  renderScenes();
+  if (!ctx.sceneKey) {
+    $("scene-status").textContent = keys.length
+      ? `${keys.length} paired registrations. Click Load on a row.`
+      : "No registration is paired yet. Pair them on the library page, tab Pairings.";
+  }
+}
+
+// Changing the mapping of a row saves it in the catalog, as the Pairings tab does; for the loaded scene the new mapping takes effect at once.
+async function onSceneMapChange(event) {
+  const select = event.target;
+  const row = select.closest("tr[data-key]");
+  if (!row || !select.classList.contains("scene-map")) return;
+  const key = row.dataset.key;
+  try {
+    const response = await fetch("/api/pairings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: key, template: select.value }) });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || response.status);
+    ctx.scenes = data;
+    remoteLog("scene", `${key} is now paired with ${select.value}`);
+    if (key === ctx.sceneKey && $("scene-mapping").checked) await loadMapping(select.value);
+    fillScenes();
+    $("scene-status").textContent = `${ctx.scenes.titles[key] || key} is now paired with ${select.value}` + (key === ctx.sceneKey ? "; the mapping is loaded." : ".");
+  } catch (error) {
+    $("scene-status").textContent = `The pairing could not be saved: ${error.message}`;
+  }
+}
+
+function onSceneTableClick(event) {
+  const button = event.target.closest("button[data-act=load]");
+  const row = button ? button.closest("tr[data-key]") : null;
+  if (row) loadScene(row.dataset.key);
+}
+
+function onSceneFilter() {
+  renderScenes();
+}
+
+async function loadMapping(template) {
+  const loaded = await (await fetch(`maps/templates/${template}.json`)).json();
+  ctx.preset = { name: loaded.name, axes: loaded.axes };
+  $("preset-name").value = loaded.name;
+  renderAxes();
+}
+
+async function loadScenes() {
+  try {
+    ctx.scenes = await (await fetch("/api/pairings")).json();
+    fillScenes();
+  } catch (error) {
+    $("scene-status").textContent = `The pairings could not be loaded: ${error.message}`;
+  }
+}
+
+async function loadScene(key) {
+  const template = ctx.scenes.pairings[key];
+  if (!key || !template) { $("scene-status").textContent = "Choose a scene first."; return; }
+  if (ctx.loading || ctx.testing) { $("scene-status").textContent = "Wait for the running load or test to finish."; return; }
+  ctx.loading = true;
+  const title = ctx.scenes.titles[key] || key;
+  const done = [];
+  try {
+    if (!ctx.access) await onConnect();  // A reloaded page has no MIDI access until Connect, so Load connects by itself.
+    if (ctx.running) onBridgeToggle();  // The bridge stays off while the registration is written.
+    if ($("scene-recall").checked) {
+      if (!ctx.vr09Out) throw new Error(ctx.access ? "no VR-09 output is selected (section 2)" : "the browser gave no MIDI access (section 1)");
+      $("scene-status").textContent = `Writing ${title} to the VR-09...`;
+      await neutralControllers();
+      const plan = await (await fetch(`/api/recall?key=${encodeURIComponent(key)}`)).json();
+      if (plan.error) throw new Error(plan.error);
+      const started = performance.now();
+      for (const message of plan.messages) {
+        ctx.vr09Out.send(message);
+        await sleep(RECALL_GAP_MS);
+      }
+      await sleep(150);
+      done.push(`registration written (${plan.messages.length} messages, ${((performance.now() - started) / 1000).toFixed(2)} s)`);
+    }
+    if ($("scene-mapping").checked) {
+      await loadMapping(template);
+      let note = `mapping ${template} loaded`;
+      for (const info of ctx.scenes.templates) if (info.name === template && info.status) note += ` [${info.status}]`;
+      done.push(note);
+    }
+    if ($("scene-start").checked && !ctx.running) {
+      onBridgeToggle();
+      done.push("bridge started");
+    }
+    ctx.sceneKey = key;
+    renderScenes();
+    $("scene-status").textContent = `${title}: ${done.join("; ")}.`;
+    remoteLog("scene", `${key} (${template}): ${done.join("; ")}`);
+  } catch (error) {
+    $("scene-status").textContent = `The scene could not be loaded: ${error.message}`;
+    remoteLog("error", `the scene ${key} could not be loaded: ${error.message}`);
+  }
+  ctx.loading = false;
+}
+
+function stepScene(delta) {
+  const keys = visibleSceneKeys();
+  if (keys.length === 0) return;
+  const at = keys.indexOf(ctx.sceneKey);
+  const next = at < 0 ? (delta > 0 ? 0 : keys.length - 1) : Math.max(0, Math.min(keys.length - 1, at + delta));
+  loadScene(keys[next]);
+}
+
+function onScenePrev() {
+  stepScene(-1);
+}
+
+function onSceneNext() {
+  stepScene(1);
+}
+
+// ---------- neutral controllers ----------
+// A CC keeps its last value until something sends another one, and a recall only writes the patch's own parameters.
+// A mapping that left expression at 20 would therefore keep the keyboard almost mute after a switch, so every load
+// first puts the controllers of the channels the mappings use back to their neutral values.
+const NEUTRAL_CHANNELS = [1, 3, 4, 16];
+const NEUTRAL_VALUES = [[121, 0], [11, 127], [1, 0], [10, 64], [71, 64], [72, 64], [73, 64], [74, 64], [75, 64], [76, 64], [77, 64]];
+
+async function neutralControllers() {
+  for (const channel of NEUTRAL_CHANNELS) {
+    for (const pair of NEUTRAL_VALUES) {
+      ctx.vr09Out.send([0xB0 | (channel - 1), pair[0], pair[1]]);
+      await sleep(2);
+    }
+  }
+}
+
+// ---------- single tones ----------
+
+function findTone(index) {
+  for (const tone of ctx.tones) if (tone.index === index) return tone;
+  return null;
+}
+
+function toneGroupKey(tone) {
+  return `${tone.section}: ${tone.group || "other"}`;
+}
+
+async function loadTones() {
+  try {
+    ctx.tones = (await (await fetch("/api/tones")).json()).tones;
+  } catch (error) {
+    $("scene-status").textContent = `The tone list could not be loaded: ${error.message}`;
+    return;
+  }
+  const groups = [];
+  for (const tone of ctx.tones) if (groups.indexOf(toneGroupKey(tone)) < 0) groups.push(toneGroupKey(tone));
+  const preferred = groups.indexOf("synth: SYNTH LEAD") >= 0 ? "synth: SYNTH LEAD" : groups[0];
+  $("tone-group").innerHTML = optionsHtml(groups, groups, preferred);
+  for (const info of ctx.scenes.templates) {
+    if (info.patch_type !== "single tone") continue;
+    try { ctx.toneTemplates[info.name] = await (await fetch(`maps/templates/${info.name}.json`)).json(); } catch (error) { /* the option then shows the bare name */ }
+  }
+  fillToneMappings();
+  renderTones();
+}
+
+// The mappings for single tones are the templates whose patch type is "single tone"; each option names what every axis
+// controls, read from the template itself. The piano one is chosen for piano tones.
+function mappingSummary(name) {
+  const template = ctx.toneTemplates[name];
+  if (!template) return name;
+  const parts = [];
+  for (const axis of template.axes) {
+    const labels = [];
+    for (const entry of axis.targets) labels.push(ctx.targetMap[entry.target] ? ctx.targetMap[entry.target].label : entry.target);
+    parts.push(`CC${axis.axis} ${labels.join(" + ")}`);
+  }
+  return parts.join(" | ");
+}
+
+function fillToneMappings() {
+  const names = [], labels = [];
+  for (const info of ctx.scenes.templates) if (info.patch_type === "single tone") { names.push(info.name); labels.push(escapeHtml(mappingSummary(info.name))); }
+  const piano = $("tone-group").value.indexOf("piano") === 0;
+  const wanted = piano ? "tone-piano-test" : "tone-synth-test-a";
+  const selected = names.indexOf($("tone-mapping").value) >= 0 && !piano && $("tone-mapping").value !== "tone-piano-test" ? $("tone-mapping").value : wanted;
+  $("tone-mapping").innerHTML = optionsHtml(names, labels, selected);
+}
+
+function renderTones() {
+  const group = $("tone-group").value;
+  let html = "<table><tr><th>Tone</th><th>Section</th><th>Group</th><th></th></tr>";
+  for (const tone of ctx.tones) {
+    if (toneGroupKey(tone) !== group) continue;
+    html += `<tr data-index="${tone.index}"${tone.index === ctx.toneIndex ? ' class="current"' : ""}><td>${escapeHtml(tone.name)}</td>` +
+      `<td>${tone.section}</td><td>${escapeHtml(tone.group || "")}</td><td class="load"><button data-act="load" class="primary">Load</button></td></tr>`;
+  }
+  $("tone-table").innerHTML = html + "</table>";
+}
+
+async function loadTone(index) {
+  const tone = findTone(index);
+  if (!tone) return;
+  if (ctx.loading || ctx.testing) { $("scene-status").textContent = "Wait for the running load or test to finish."; return; }
+  ctx.loading = true;
+  const template = $("tone-mapping").value;
+  const done = [];
+  try {
+    if (!ctx.access) await onConnect();
+    if (!ctx.vr09Out) throw new Error(ctx.access ? "no VR-09 output is selected (section 2)" : "the browser gave no MIDI access (section 1)");
+    if (ctx.running) onBridgeToggle();
+    $("scene-status").textContent = `Loading ${tone.name} alone...`;
+    await neutralControllers();
+    const plan = await (await fetch(`/api/tone-recall?index=${index}`)).json();
+    if (plan.error) throw new Error(plan.error);
+    const started = performance.now();
+    for (const message of plan.messages) {
+      ctx.vr09Out.send(message);
+      await sleep(RECALL_GAP_MS);
+    }
+    await sleep(150);
+    done.push(`${tone.name} loaded alone on the upper ${tone.section} (${((performance.now() - started) / 1000).toFixed(2)} s)`);
+    if (template) {
+      await loadMapping(template);
+      done.push(`mapping: ${mappingSummary(template)}`);
+    }
+    onBridgeToggle();
+    done.push("bridge started");
+    ctx.toneIndex = index;
+    ctx.sceneKey = "";
+    renderTones();
+    $("scene-status").textContent = `${done.join(";\n")}.\nHold a note, move each axis, and mark it "works" or "no effect" in the monitor.`;
+    remoteLog("tone", `${tone.name} (${tone.section}, ${tone.group}) with ${template}`);
+  } catch (error) {
+    $("scene-status").textContent = `The tone could not be loaded: ${error.message}`;
+    remoteLog("error", `the tone ${tone.name} could not be loaded: ${error.message}`);
+  }
+  ctx.loading = false;
+}
+
+function onToneTableClick(event) {
+  const button = event.target.closest("button[data-act=load]");
+  const row = button ? button.closest("tr[data-index]") : null;
+  if (row) loadTone(Number(row.dataset.index));
+}
+
+function onToneGroup() {
+  fillToneMappings();
+  renderTones();
+}
+
+// A new mapping reloads the tone, so that nothing the previous mapping changed stays behind.
+function onToneMapping() {
+  if (ctx.toneIndex >= 0) loadTone(ctx.toneIndex);
+}
+
+function showTones(on) {
+  $("tone-controls").hidden = !on;
+  $("tone-table").hidden = !on;
+  $("scene-table").hidden = on;
+  $("scene-controls").hidden = on;
+  $("scene-status").textContent = on ? (ctx.toneIndex >= 0 ? `${findTone(ctx.toneIndex).name} is loaded.` : "Choose a tone category and a mapping, then click Load on a tone.") : "Click Load on a registration.";
+  $("show-tones").classList.toggle("on", on);
+  $("show-scenes").classList.toggle("on", !on);
+}
+
+function onShowTones() {
+  showTones(true);
+  if (ctx.tones.length === 0) loadTones(); else fillToneMappings();
+}
+
+function onShowScenes() {
+  showTones(false);
+}
+
 // ---------- start ----------
 
 function start() {
@@ -679,6 +1532,7 @@ function start() {
   refreshPresetList();
   fillCcPanel();
   loadCatalog();
+  loadScenes();
   $("connect").addEventListener("click", onConnect);
   $("axes").addEventListener("change", onAxesChange);
   $("axes").addEventListener("click", onAxesClick);
@@ -695,6 +1549,32 @@ function start() {
   $("cc-send").addEventListener("click", onCcSend);
   $("cc-compare").addEventListener("click", onCcCompare);
   $("cc-value").addEventListener("input", onCcValue);
+  window.addEventListener("error", onWindowError);
+  window.addEventListener("unhandledrejection", onRejection);
+  remoteLog("page", "the bridge page was opened");
+  $("scene-table").addEventListener("click", onSceneTableClick);
+  $("tone-table").addEventListener("click", onToneTableClick);
+  $("tone-group").addEventListener("change", onToneGroup);
+  $("tone-mapping").addEventListener("change", onToneMapping);
+  $("show-tones").addEventListener("click", onShowTones);
+  $("show-scenes").addEventListener("click", onShowScenes);
+  $("meters").addEventListener("click", onMeterClick);
+  $("scene-table").addEventListener("change", onSceneMapChange);
+  $("scene-filter").addEventListener("input", onSceneFilter);
+  $("scene-prev").addEventListener("click", onScenePrev);
+  $("scene-next").addEventListener("click", onSceneNext);
+  $("scene-reload").addEventListener("click", loadScenes);
+  $("target-select").addEventListener("change", onTargetSelect);
+  $("target-value").addEventListener("input", onTargetValue);
+  $("target-send").addEventListener("click", onTargetSend);
+  $("target-test").addEventListener("click", onTargetTest);
+  $("target-sweep").addEventListener("click", onSweep);
+  $("target-heard").addEventListener("click", onHeardYes);
+  $("target-silent").addEventListener("click", onHeardNo);
+  $("test-all").addEventListener("click", onTestAll);
+  $("test-table").addEventListener("click", onTestTableClick);
+  $("tests-json").addEventListener("click", onTestsJson);
+  $("tests-clear").addEventListener("click", onTestsClear);
   for (const id of ["touche-in", "vr09-in", "vr09-out"]) $(id).addEventListener("change", onPortChange);
   setInterval(drainOne, SEND_GAP_MS);
   setInterval(updateRate, 1000);

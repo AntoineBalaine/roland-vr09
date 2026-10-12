@@ -196,9 +196,14 @@ meaningful unit is the 13 layouts, not the 146 presets.
   curve. The roles follow the layouts found in the survey.
 - The 36 templates cover organ (12), synth lead, pad, bass, brass, strings, keys and pluck
   (14), piano and electric piano (4), crossfades between parts (4) and performance (2).
-- They are proposals that we designed: the survey could not give a per-patch-type answer. Of
-  the 179 target uses in the templates, 21 point at verified targets, 23 at recalled ones and
-  135 at documented-only ones.
+- They are proposals that we designed: the survey could not give a per-patch-type answer.
+- Update, 2026-10-11: `tools/check_targets.py` tested the 53 parameter addresses on the unit. 45 accept
+  writes, which became `verified`; 8 refuse them (see `midi-capabilities.md`) and became `unavailable`.
+  Only the 13 CC targets are still `documented`, because a CC cannot be read back and has to be judged by
+  ear. Of the 36 templates, 3 are fully verified, 9 have every address verified and CCs left to listen to,
+  4 are partly working, and 20 have an axis with no working target (mostly the synth cutoff on CC17), so
+  they need rework. The generator reports this in `index.json`, and the bridge page marks those templates
+  and skips writes to unavailable targets.
 
 ### The bridge page (written, not yet run on the unit)
 

@@ -2,7 +2,7 @@
  "name": "organ-pipe-registration",
  "patch_type": "organ",
  "summary": "A pipe-organ build-up: foundation fixed by the patch, mixtures come in over the tone axis.",
- "status": "proposal, untested",
+ "status": "every address verified; CC targets need listening",
  "axes": [
   {
    "axis": 16,
@@ -98,5 +98,10 @@
     }
    ]
   }
- ]
+ ],
+ "unavailable_targets": [],
+ "untested_targets": [
+  "cc-upper-reverb"
+ ],
+ "dead_axes": []
 }

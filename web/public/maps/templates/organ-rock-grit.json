@@ -2,7 +2,7 @@
  "name": "organ-rock-grit",
  "patch_type": "organ",
  "summary": "Overdrive and the dry mix move in opposite directions so the grit grows without losing the attack.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC18",
  "axes": [
   {
    "axis": 16,
@@ -98,5 +98,14 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "eq-high",
+  "eq-low",
+  "overdrive-dry"
+ ],
+ "untested_targets": [],
+ "dead_axes": [
+  18
  ]
 }

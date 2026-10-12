@@ -12,3 +12,4 @@ web/dist/
 library/audio-wav/
 library/photos/test.jpg
 library/photos/_tmp.jpg
+library/page-log.jsonl*

@@ -2,7 +2,7 @@
  "name": "synth-pad-ambient",
  "patch_type": "synth pad",
  "summary": "Wide and washed: effects dominate.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC17",
  "axes": [
   {
    "axis": 16,
@@ -68,5 +68,15 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "upper-synth-cutoff"
+ ],
+ "untested_targets": [
+  "cc-upper-chorus",
+  "cc-upper-reverb"
+ ],
+ "dead_axes": [
+  17
  ]
 }

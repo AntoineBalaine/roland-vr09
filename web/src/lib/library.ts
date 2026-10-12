@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
+import { dt1Message, recallMessages, type Dump } from "./recall";
 
 // VR09_ROOT (default: the folder above web/) holds library/, dumps/ and setlist.txt.
 const ROOT = path.resolve(process.env.VR09_ROOT ?? path.join(process.cwd(), ".."));
@@ -36,6 +37,7 @@ export interface PagePatch {
   notes: string;
   tags: string[];
   reviewed: boolean;
+  touche: string;
   photo: string;
   audio: string;
 }
@@ -168,6 +170,7 @@ export function pageData(): PageData {
       notes: text("notes"),
       tags: (e.tags ?? []).map(String),
       reviewed: Boolean(e.reviewed),
+      touche: String(e.touche ?? ""),
       photo: fs.existsSync(f.photo) ? `photos/${encodeURIComponent(key)}.jpg` : "",
       audio: fs.existsSync(f.audio) ? `audio/${encodeURIComponent(key)}.ogg` : "",
     };
@@ -245,14 +248,14 @@ function checkLocal(request: Request): void {
   const host = request.headers.get("host") ?? "";
   if (!["127.0.0.1", "localhost"].includes(host.replace(/:\d+$/, ""))) throw new HttpError(403, "unexpected host");
 }
-function checkWrite(request: Request): void {
+function checkWrite(request: Request, guardCapture = true): void {
   checkLocal(request);
   const origin = request.headers.get("origin");
   if (origin && new URL(origin).host !== request.headers.get("host")) throw new HttpError(403, "refused: another site");
   if (!(request.headers.get("content-type") ?? "").startsWith("application/json")) {
     throw new HttpError(403, "refused: not a request from the page");
   }
-  if (captureRunning()) throw new HttpError(409, "a capture is running: changes are disabled until it stops");
+  if (guardCapture && captureRunning()) throw new HttpError(409, "a capture is running: changes are disabled until it stops");
 }
 
 export const getData = (request: Request): Promise<Response> =>
@@ -302,3 +305,239 @@ export function media(request: Request, kind: keyof typeof MEDIA, name: string):
     return new Response(new Uint8Array(data), { status: 200, headers: { "Content-Type": type, "Accept-Ranges": "bytes", "Cache-Control": "no-store" } });
   });
 }
+
+// The results of the bridge page's target test: one entry per target id, kept next to the library.
+const TARGET_TESTS = path.join(LIBRARY, "target-tests.json");
+
+function readTargetTests(): Record<string, unknown> {
+  if (!fs.existsSync(TARGET_TESTS)) return {};
+  return JSON.parse(fs.readFileSync(TARGET_TESTS, "utf8")) as Record<string, unknown>;
+}
+
+export const getTargetTests = (request: Request): Promise<Response> =>
+  respond(() => {
+    checkLocal(request);
+    return json(200, readTargetTests());
+  });
+
+export const postTargetTest = (request: Request): Promise<Response> =>
+  respond(async () => {
+    checkWrite(request, false); // these results do not touch the catalog, so a running capture is no reason to refuse
+    const body = (await request.json()) as { id?: unknown; result?: unknown; clear?: unknown };
+    let tests = readTargetTests();
+    if (body.clear === true) {
+      tests = {};
+    } else {
+      if (typeof body.id !== "string" || !/^[\w.-]{1,80}$/.test(body.id)) throw new HttpError(400, "id must be a target id");
+      if (typeof body.result !== "object" || body.result === null || Array.isArray(body.result)) throw new HttpError(400, "result must be an object");
+      tests[body.id] = body.result;
+    }
+    writeAtomically(TARGET_TESTS, JSON.stringify(tests, null, 2) + "\n");
+    return json(200, tests);
+  });
+
+// The live log of the bridge page: its steps are appended here as one JSON object per line, so that they can be
+// followed while a test runs (tail -F library/page-log.jsonl). The file is rotated when it passes 1 MB.
+const PAGE_LOG = path.join(LIBRARY, "page-log.jsonl");
+
+export const postPageLog = (request: Request): Promise<Response> =>
+  respond(async () => {
+    checkWrite(request, false);
+    const body = (await request.json()) as { events?: unknown };
+    if (!Array.isArray(body.events) || body.events.length > 200) throw new HttpError(400, "events must be a list of at most 200");
+    const lines = body.events.map((e) => {
+      const event = e as { t?: unknown; kind?: unknown; text?: unknown };
+      return JSON.stringify({ t: Number(event.t) || Date.now(), kind: String(event.kind ?? "").slice(0, 20), text: String(event.text ?? "").slice(0, 2000) });
+    });
+    fs.mkdirSync(LIBRARY, { recursive: true });
+    if (fs.existsSync(PAGE_LOG) && fs.statSync(PAGE_LOG).size > 1_000_000) fs.renameSync(PAGE_LOG, `${PAGE_LOG}.1`);
+    fs.appendFileSync(PAGE_LOG, lines.join("\n") + "\n");
+    return json(200, { ok: true });
+  });
+
+// Pairings: which Touché remap template goes with which registration (a library patch) ---------------------
+
+export interface TemplateInfo {
+  name: string;
+  patch_type: string;
+  status: string;
+  dead_axes: number[];
+}
+export interface Suggestion {
+  template: string;
+  reason: string;
+}
+export interface PairingData {
+  templates: TemplateInfo[];
+  order: string[];
+  titles: Record<string, string>;
+  pairings: Record<string, string>;
+  suggestions: Record<string, Suggestion>;
+  capture_running: boolean;
+  message?: string;
+}
+
+// The templates are generated by tools/make_templates.py into web/public/maps; the dev server runs in web/.
+function readTemplates(): TemplateInfo[] {
+  const file = path.join(process.cwd(), "public", "maps", "index.json");
+  if (!fs.existsSync(file)) return [];
+  const index = JSON.parse(fs.readFileSync(file, "utf8")) as Partial<TemplateInfo>[];
+  return index.map((t) => ({ name: String(t.name), patch_type: String(t.patch_type ?? ""), status: String(t.status ?? ""), dead_axes: t.dead_axes ?? [] }));
+}
+
+// The first address of each part block and the offsets inside it: 00 mute (0 means it sounds), 01 tone number, 02 and 03 bank bytes.
+const PARTS = {
+  organ: ["organ_upper", 0x8000],
+  piano: ["upper_piano", 0x4080],
+  synth: ["upper_synth", 0x4180],
+  synth2: ["upper_synth_dual2", 0x4100],
+  lowerSynth: ["lower_synth", 0x4980],
+} as const;
+
+// The mapping follows the sections that sound: each one drives only targets the unit accepts on those sections
+// (the section-* templates of tools/make_templates.py). Organs keep the organ templates, whose drawbars all work.
+function suggest(key: string, templates: TemplateInfo[]): Suggestion {
+  const f = filesOf(key).dump;
+  if (!fs.existsSync(f)) return { template: "", reason: "no dump" };
+  const dump = JSON.parse(fs.readFileSync(f, "utf8")) as Record<string, number>;
+  const at = (part: keyof typeof PARTS, offset: number): number | undefined => {
+    const [block, base] = PARTS[part];
+    return dump[`${block}:${(base + offset).toString(16).toUpperCase().padStart(8, "0")}`];
+  };
+  const sounds = (part: keyof typeof PARTS): boolean => at(part, 0) === 0;
+  const organ = sounds("organ"), piano = sounds("piano"), synth = sounds("synth"), synth2 = sounds("synth2"), lower = sounds("lowerSynth");
+  const known = new Set(templates.map((x) => x.name));
+  const pick = (name: string, reason: string): Suggestion => ({ template: known.has(name) ? name : "", reason });
+
+  if (organ && piano) return pick("xfade-piano-organ", "the organ and the upper piano sound");
+  if (organ && (synth || synth2)) return pick("xfade-organ-synth", "the organ and an upper synth sound");
+  if (organ && lower) return pick("section-organ-split", "the organ sounds over a lower synth");
+  if (organ) return pick("organ-brightness-sweep", "the organ sounds");
+  if (piano && synth2) return pick("section-piano-layer", "the upper piano sounds with a synth dual 2 layer");
+  if (piano && lower) return pick("section-piano-split", "the upper piano sounds over a lower synth");
+  if (piano) return pick("section-piano", "the upper piano sounds alone");
+  if (synth && synth2) return pick("section-synth-layers", "the upper synth sounds with its dual 2 layer");
+  if (synth && lower) return pick("section-synth-split", "the upper synth sounds over a lower synth");
+  if (synth || synth2) return pick("section-synth", "one upper synth sounds");
+  return pick("perform-expression-reverb", "no organ, piano or synth section sounds (a drum patch)");
+}
+
+function pairingData(): PairingData {
+  const patches = loadCatalog();
+  const templates = readTemplates();
+  const order = Object.keys(patches).sort((a, b) => (patches[a].captured < patches[b].captured ? -1 : patches[a].captured > patches[b].captured ? 1 : 0));
+  const data: PairingData = { templates, order, titles: {}, pairings: {}, suggestions: {}, capture_running: captureRunning() };
+  for (const key of order) {
+    data.titles[key] = String(patches[key].title ?? "");
+    if (patches[key].touche) data.pairings[key] = String(patches[key].touche);
+    data.suggestions[key] = suggest(key, templates);
+  }
+  return data;
+}
+
+type PairingRequest = { key?: unknown; template?: unknown; suggest?: unknown };
+
+function applyPairing(body: PairingRequest): string {
+  const patches = loadCatalog();
+  const templates = readTemplates();
+  if (body.suggest === "unpaired" || body.suggest === "all") {
+    let count = 0;
+    for (const key of Object.keys(patches)) {
+      if (patches[key].touche && body.suggest === "unpaired") continue;
+      const s = suggest(key, templates);
+      if (!s.template) continue;
+      patches[key].touche = s.template;
+      count += 1;
+    }
+    saveCatalog(patches);
+    return `${count} patches paired from the sections that sound`;
+  }
+  const key = String(body.key);
+  if (!(key in patches)) throw new HttpError(404, `no patch named '${key}'`);
+  if (body.template === null || body.template === "") {
+    delete patches[key].touche;
+    saveCatalog(patches);
+    return "pairing removed";
+  }
+  const template = String(body.template);
+  if (!templates.some((x) => x.name === template)) throw new HttpError(400, `no template named '${template}'`);
+  patches[key].touche = template;
+  saveCatalog(patches);
+  return "paired";
+}
+
+export const getPairings = (request: Request): Promise<Response> =>
+  respond(() => {
+    checkLocal(request);
+    return json(200, pairingData());
+  });
+
+export const postPairing = (request: Request): Promise<Response> =>
+  respond(async () => {
+    checkWrite(request);
+    const message = applyPairing((await request.json()) as PairingRequest);
+    return json(200, { ...pairingData(), message });
+  });
+
+function libraryDumps(patches: Catalog): Record<string, Dump> {
+  const dumps: Record<string, Dump> = {};
+  for (const k of Object.keys(patches)) {
+    const file = filesOf(k).dump;
+    if (fs.existsSync(file)) dumps[k] = JSON.parse(fs.readFileSync(file, "utf8")) as Dump;
+  }
+  return dumps;
+}
+
+// What the page's "Load scene" writes to the VR-09: the messages of vr09.py's recall for one patch of the library.
+export const getRecall = (request: Request): Promise<Response> =>
+  respond(() => {
+    checkLocal(request);
+    const key = new URL(request.url).searchParams.get("key") ?? "";
+    const patches = loadCatalog();
+    if (!(key in patches)) throw new HttpError(404, `no patch named '${key}'`);
+    const messages = recallMessages(libraryDumps(patches), key);
+    return json(200, { key, title: patches[key].title, template: String(patches[key].touche ?? ""), messages });
+  });
+
+// Single tones: one tone of Roland's list, played alone. A library patch where only that section sounds, with every
+// sound-shaping value at 64 (no change), is recalled first; then the tone number and bank are written into its part.
+interface Tone {
+  section: string;
+  group: string | null;
+  name: string;
+  tone_number: number;
+  bank_msb: number;
+  bank_lsb: number;
+}
+const TONE_BASES: Record<string, { key: string; address: number[] }> = {
+  synth: { key: "14-3_Native_Lead", address: [0x01, 0x03, 0x01] },
+  piano: { key: "13-2_Comp_Piano", address: [0x01, 0x01, 0x01] },
+};
+
+function readTones(): Tone[] {
+  return JSON.parse(fs.readFileSync(path.join(ROOT, "docs", "tones.json"), "utf8")) as Tone[];
+}
+
+export const getTones = (request: Request): Promise<Response> =>
+  respond(() => {
+    checkLocal(request);
+    const tones = readTones()
+      .map((tone, index) => ({ index, ...tone }))
+      .filter((tone) => tone.section in TONE_BASES);
+    return json(200, { tones });
+  });
+
+export const getToneRecall = (request: Request): Promise<Response> =>
+  respond(() => {
+    checkLocal(request);
+    const index = Number(new URL(request.url).searchParams.get("index"));
+    const tone = readTones()[index];
+    if (!Number.isInteger(index) || !tone) throw new HttpError(404, "no tone with this index");
+    const base = TONE_BASES[tone.section];
+    if (!base) throw new HttpError(400, `the ${tone.section} section cannot be played as a single tone`);
+    const patches = loadCatalog();
+    if (!(base.key in patches)) throw new HttpError(500, `the base patch '${base.key}' is not in the library`);
+    const messages = recallMessages(libraryDumps(patches), base.key);
+    messages.push(dt1Message(base.address, [tone.tone_number, tone.bank_msb, tone.bank_lsb]));
+    return json(200, { tone, base: base.key, messages });
+  });

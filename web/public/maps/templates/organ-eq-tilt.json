@@ -2,7 +2,7 @@
  "name": "organ-eq-tilt",
  "patch_type": "organ",
  "summary": "Tone tilts the organ's EQ between dark and bright.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC17",
  "axes": [
   {
    "axis": 16,
@@ -78,5 +78,13 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "eq-high",
+  "eq-low"
+ ],
+ "untested_targets": [],
+ "dead_axes": [
+  17
  ]
 }

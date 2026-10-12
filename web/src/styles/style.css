@@ -64,3 +64,15 @@ li.item img { width: 88px; aspect-ratio: 2 / 1; object-fit: cover; border-radius
 #toast { position: fixed; right: 16px; bottom: 16px; background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 70vw; }
 #toast.show { opacity: .95; } #toast.bad { background: var(--bad); color: #fff; }
 @media (max-width: 640px) { li.item { grid-template-columns: 26px 1fr auto; } li.item img { display: none; } }
+
+/* The pairings table: a registration and its Touché mapping, one row each. */
+#pairings { padding: 16px; max-width: 1100px; }
+#pair-count { color: var(--muted); }
+#pair-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+#pair-table th { text-align: left; color: var(--muted); font-weight: 500; font-size: 13px; padding: 4px 8px; }
+#pair-table td { padding: 5px 8px; border-top: 1px solid var(--line); vertical-align: top; }
+#pair-table select { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--text); font: inherit; }
+#pair-table tr.draft td { background: var(--card); }
+#pair-table .note { color: var(--muted); font-size: 13px; }
+#pair-table .note .warn { color: var(--flag); }
+#pair-table td.act { white-space: nowrap; width: 1%; }

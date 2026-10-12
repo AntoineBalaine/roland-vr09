@@ -2,7 +2,7 @@
  "name": "organ-jazz-percussive",
  "patch_type": "organ",
  "summary": "A clean, percussive jazz sound: click and the 4' drawbar come in with the tone axis.",
- "status": "proposal, untested",
+ "status": "needs rework: no working target on axis CC19",
  "axes": [
   {
    "axis": 16,
@@ -78,5 +78,12 @@
     }
    ]
   }
+ ],
+ "unavailable_targets": [
+  "eq-high"
+ ],
+ "untested_targets": [],
+ "dead_axes": [
+  19
  ]
 }
