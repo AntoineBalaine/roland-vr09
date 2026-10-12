@@ -1,0 +1,82 @@
+{
+ "name": "synth-keys-electric",
+ "patch_type": "synth keys",
+ "summary": "Electric-piano-like synth keys: decay on body, tremolo-ish vibrato, reverb.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "upper-synth-decay",
+     "low": 30,
+     "high": 100,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "upper-synth-cutoff",
+     "low": 50,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "cc-upper-vibrato-depth",
+     "low": 0,
+     "high": 60,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "cc-upper-vibrato-rate",
+     "low": 50,
+     "high": 100,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "cc-upper-reverb",
+     "low": 10,
+     "high": 90,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

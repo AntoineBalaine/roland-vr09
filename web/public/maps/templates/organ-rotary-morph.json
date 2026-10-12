@@ -1,0 +1,102 @@
+{
+ "name": "organ-rotary-morph",
+ "patch_type": "organ",
+ "summary": "All four axes shape the rotary speaker instead of the tone.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "woofer-slow",
+     "low": 30,
+     "high": 90,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "tweeter-slow",
+     "low": 30,
+     "high": 90,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "woofer-fast",
+     "low": 60,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "tweeter-fast",
+     "low": 60,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "woofer-accel",
+     "low": 0,
+     "high": 15,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "tweeter-accel",
+     "low": 0,
+     "high": 15,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "rotary-brake",
+     "low": 0,
+     "high": 1,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

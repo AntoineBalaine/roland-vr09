@@ -1,0 +1,92 @@
+{
+ "name": "organ-lower-swell",
+ "patch_type": "organ",
+ "summary": "Shapes the lower manual's drawbars; for a bass or comping part on the lower keyboard.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "organ-lower-d8",
+     "low": 0,
+     "high": 8,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-lower-d16",
+     "low": 0,
+     "high": 6,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "organ-lower-d4",
+     "low": 0,
+     "high": 8,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-lower-d2",
+     "low": 0,
+     "high": 6,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "organ-lower-d2f",
+     "low": 0,
+     "high": 8,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "organ-lower-d1",
+     "low": 0,
+     "high": 8,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

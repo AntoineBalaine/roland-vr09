@@ -1,0 +1,82 @@
+{
+ "name": "synth-bass-growl",
+ "patch_type": "synth bass",
+ "summary": "Resonance does the growling; attack is shortened as the tone opens.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "upper-synth-resonance",
+     "low": 10,
+     "high": 100,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "upper-synth-cutoff",
+     "low": 10,
+     "high": 90,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "upper-synth-attack",
+     "low": 40,
+     "high": 0,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "upper-synth-release",
+     "low": 10,
+     "high": 60,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "cc-upper-chorus",
+     "low": 0,
+     "high": 50,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

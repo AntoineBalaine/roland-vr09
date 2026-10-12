@@ -1,0 +1,72 @@
+{
+ "name": "piano-intimate",
+ "patch_type": "piano",
+ "summary": "A dry, close piano: almost no effects, just expression and a little width.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "cc-piano-expression",
+     "low": 70,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "cc-piano-reverb",
+     "low": 0,
+     "high": 50,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "cc-upper-pan",
+     "low": 58,
+     "high": 70,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "cc-piano-chorus",
+     "low": 0,
+     "high": 20,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

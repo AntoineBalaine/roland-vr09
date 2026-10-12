@@ -1,0 +1,72 @@
+{
+ "name": "perform-expression-reverb",
+ "patch_type": "any",
+ "summary": "A neutral performance template: overall volume, reverb and chorus sends.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "cc-master-expression",
+     "low": 50,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "cc-upper-reverb",
+     "low": 0,
+     "high": 110,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "cc-upper-chorus",
+     "low": 0,
+     "high": 90,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "cc-upper-vibrato-depth",
+     "low": 0,
+     "high": 90,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

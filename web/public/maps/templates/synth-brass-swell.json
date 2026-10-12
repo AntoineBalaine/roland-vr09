@@ -1,0 +1,72 @@
+{
+ "name": "synth-brass-swell",
+ "patch_type": "synth brass",
+ "summary": "A brass swell: attack lengthens while the filter opens.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "upper-synth-attack",
+     "low": 0,
+     "high": 70,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "upper-synth-cutoff",
+     "low": 40,
+     "high": 120,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "cc-upper-vibrato-depth",
+     "low": 0,
+     "high": 60,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "cc-upper-reverb",
+     "low": 10,
+     "high": 80,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,102 @@
+{
+ "name": "organ-full-to-flute",
+ "patch_type": "organ",
+ "summary": "Tone crossfades from a full registration to a flute-like one.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "organ-level",
+     "low": 80,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "organ-upper-d16",
+     "low": 8,
+     "high": 2,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d8",
+     "low": 8,
+     "high": 4,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d4",
+     "low": 2,
+     "high": 8,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d2",
+     "low": 0,
+     "high": 6,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "leakage",
+     "low": 0,
+     "high": 60,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "click-on",
+     "low": 0,
+     "high": 40,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

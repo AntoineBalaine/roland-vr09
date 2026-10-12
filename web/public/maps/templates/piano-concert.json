@@ -1,0 +1,72 @@
+{
+ "name": "piano-concert",
+ "patch_type": "piano",
+ "summary": "A concert piano: expression on body, reverb on effects, chorus kept subtle.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "cc-piano-expression",
+     "low": 60,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "cc-piano-chorus",
+     "low": 0,
+     "high": 40,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "cc-upper-pan",
+     "low": 54,
+     "high": 74,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "cc-piano-reverb",
+     "low": 20,
+     "high": 110,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,102 @@
+{
+ "name": "organ-rock-grit",
+ "patch_type": "organ",
+ "summary": "Overdrive and the dry mix move in opposite directions so the grit grows without losing the attack.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "organ-level",
+     "low": 80,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "overdrive",
+     "low": 20,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "soft"
+    },
+    {
+     "target": "overdrive-dry",
+     "low": 127,
+     "high": 40,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "eq-high",
+     "low": 52,
+     "high": 76,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "eq-low",
+     "low": 76,
+     "high": 56,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "rotary-fast",
+     "low": 0,
+     "high": 1,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "leakage",
+     "low": 20,
+     "high": 100,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

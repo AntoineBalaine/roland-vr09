@@ -1,0 +1,102 @@
+{
+ "name": "organ-gospel-swell",
+ "patch_type": "organ",
+ "summary": "Body swells the low drawbars together; tone drives overdrive and brightness; effects add leakage.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "organ-upper-d16",
+     "low": 3,
+     "high": 8,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d8",
+     "low": 4,
+     "high": 8,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d4",
+     "low": 2,
+     "high": 6,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "overdrive",
+     "low": 10,
+     "high": 110,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "soft"
+    },
+    {
+     "target": "eq-high",
+     "low": 60,
+     "high": 72,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "rotary-fast",
+     "low": 0,
+     "high": 1,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "leakage",
+     "low": 10,
+     "high": 90,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

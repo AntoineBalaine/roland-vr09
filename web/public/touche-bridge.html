@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Touché to VR-09 bridge</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --panel: #ffffff; --ink: #1d1c1a; --muted: #6b675f; --line: #d9d5cb;
+    --accent: #1f6f5c; --warn: #a4471d; --ok: #1f6f5c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161715; --panel: #1f201e; --ink: #ecebe6; --muted: #9b978d; --line: #34352f;
+      --accent: #5fc2a8; --warn: #e08a5c; --ok: #5fc2a8;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, sans-serif; }
+  main { max-width: 820px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 12px 0; }
+  p { margin: 4px 0 8px; }
+  .muted { color: var(--muted); }
+  .ok { color: var(--ok); } .bad { color: var(--warn); }
+  button, select, input, textarea { font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+  button { cursor: pointer; } button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.on { background: var(--warn); color: #fff; border-color: var(--warn); }
+  label { display: block; margin: 4px 0; } label span { display: inline-block; min-width: 110px; color: var(--muted); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
+  .meter { flex: 1 1 140px; } .meter .track { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
+  .meter .fill { height: 100%; background: var(--accent); width: 0; }
+  .axis { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 8px; }
+  .trow { display: grid; grid-template-columns: minmax(180px, 3fr) repeat(4, minmax(56px, 1fr)) minmax(80px, 1.2fr) auto; gap: 6px; margin: 6px 0; align-items: end; }
+  .trow label { margin: 0; } .trow label span { display: block; min-width: 0; font-size: 11px; }
+  .trow input, .trow select { width: 100%; }
+  @media (max-width: 640px) { .trow { grid-template-columns: 1fr 1fr 1fr; } .trow label:first-child { grid-column: 1 / -1; } }
+  pre { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin: 6px 0; max-height: 220px; overflow: auto; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+  textarea { width: 100%; min-height: 120px; font-family: ui-monospace, monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Touché to VR-09 bridge</h1>
+  <p class="muted">Because Web MIDI only works in a secure context, open this page from <code>http://localhost:8765/touche-bridge.html</code>.
+    On an Android phone, run <code>adb reverse tcp:8765 tcp:8765</code> on the computer first, so that the phone's localhost reaches the dev server.</p>
+
+  <section>
+    <h2>1. Browser support</h2>
+    <div id="support"></div>
+    <div class="row"><button id="connect" class="primary">Connect MIDI (asks for SysEx permission)</button></div>
+  </section>
+
+  <section>
+    <h2>2. Ports</h2>
+    <label><span>Touché input</span><select id="touche-in"></select></label>
+    <label><span>VR-09 input</span><select id="vr09-in"></select></label>
+    <label><span>VR-09 output</span><select id="vr09-out"></select></label>
+    <p class="muted">Ports named like TOUCHE or VR-09 are chosen automatically. The Touché's performance CCs arrive on its "Main Port".</p>
+  </section>
+
+  <section>
+    <h2>3. Touché monitor</h2>
+    <div id="meters"></div>
+    <div class="row"><span>Buttons: <b id="buttons">none yet</b></span><span class="muted">Messages per second: <b id="rate">0</b></span></div>
+  </section>
+
+  <section>
+    <h2>4. VR-09 probe (read only)</h2>
+    <div class="row">
+      <button id="identity">Identity request</button>
+      <button id="read-drawbars">Read upper drawbars</button>
+    </div>
+    <pre id="probe">Nothing sent yet.</pre>
+  </section>
+
+  <section>
+    <h2>5. CC out test</h2>
+    <p class="muted">Because the VR-09 documents some CCs but none was ever tested live, this panel sends one CC and, with "Send and compare", reads
+      the VR-09's state before and after, so the result does not depend on hearing a change. The channels are those of MIDI IN Mode 2.</p>
+    <div class="row">
+      <label><span>Channel</span><select id="cc-channel"></select></label>
+      <label><span>CC</span><select id="cc-number"></select></label>
+      <label><span>Value</span><input id="cc-value" type="range" min="0" max="127" value="64"> <b id="cc-value-text">64</b></label>
+    </div>
+    <div class="row">
+      <button id="cc-send">Send once</button>
+      <button id="cc-compare" class="primary">Send and compare</button>
+    </div>
+    <pre id="cc-result">Nothing sent yet.</pre>
+  </section>
+
+  <section>
+    <h2>6. Remap preset</h2>
+    <p class="muted">Each of the four axes can drive several VR-09 targets at once, each over its own range, window of the axis travel and curve.
+      A range may descend (low above high) to invert. Targets are grouped by how much we trust them: "verified" were written alone on the unit,
+      "recalled" changed when a dump was recalled, "documented" are only in Roland's document.</p>
+    <div id="catalog-status" class="muted">Loading the templates...</div>
+    <div class="row">
+      <select id="template-list"></select>
+      <button id="template-load" class="primary">Load template</button>
+    </div>
+    <p id="template-summary" class="muted"></p>
+    <div class="row">
+      <label><span>Preset name</span><input id="preset-name" value="New preset"></label>
+      <select id="preset-list"></select>
+      <button id="preset-load">Load</button>
+      <button id="preset-save" class="primary">Save</button>
+      <button id="preset-delete">Delete</button>
+    </div>
+    <div id="axes"></div>
+    <div class="row">
+      <button id="export">Show JSON</button>
+      <button id="import">Import JSON</button>
+    </div>
+    <textarea id="json" placeholder="Preset JSON appears here. Paste a preset and press Import JSON to load it."></textarea>
+  </section>
+
+  <section>
+    <h2>7. Bridge</h2>
+    <p class="bad">While the bridge runs, moving an axis writes to the VR-09's current sound. It does not change the saved Registrations.</p>
+    <div class="row"><button id="bridge">Start bridge</button><span class="muted">Sent: <b id="sent">0</b> messages</span></div>
+    <pre id="log"></pre>
+  </section>
+</main>
+
+<script>
+const AXES = [16, 17, 18, 19];
+const AXIS_ROLES = { 16: "body", 17: "tone", 18: "modulation", 19: "effects" };
+const SEND_GAP_MS = 5;  // The unit overflows its buffer with no gap, and gaps of 1 to 20 ms all worked.
+const STATUS_ORDER = ["verified", "recalled", "documented"];
+const STATUS_LABELS = { verified: "Verified on the unit", recalled: "Changes with a dump recall", documented: "Documented only" };
+
+// The blocks read before and after a CC, with the addresses and sizes that vr09.py uses.
+const BLOCKS = [
+  { name: "system", address: [0x00, 0x00, 0x00], size: 0x69 },
+  { name: "organ upper", address: [0x02, 0x00, 0x00], size: 0x3A },
+  { name: "organ lower", address: [0x02, 0x01, 0x00], size: 0x3A },
+  { name: "organ pedal", address: [0x02, 0x02, 0x00], size: 0x3A },
+  { name: "upper piano", address: [0x01, 0x01, 0x00], size: 0x65 },
+  { name: "upper synth", address: [0x01, 0x03, 0x00], size: 0x65 },
+  { name: "lower piano", address: [0x01, 0x11, 0x00], size: 0x65 },
+  { name: "lower synth", address: [0x01, 0x13, 0x00], size: 0x65 },
+];
+const CC_LIST = [[7, "Volume"], [10, "Pan"], [11, "Expression"], [64, "Hold 1 (sustain)"], [71, "Resonance"], [72, "Release time"],
+  [73, "Attack time"], [74, "Cutoff"], [75, "Decay time"], [76, "Vibrato rate"], [77, "Vibrato depth"], [91, "Reverb send"], [93, "Chorus send"]];
+const CHANNELS = [[1, "1 Piano Dual 2"], [2, "2 Pedal"], [3, "3 Lower"], [4, "4 Upper"], [16, "16 Control"]];
+
+// Because nested functions are not allowed, every piece of state lives in this one object.
+const ctx = {
+  access: null, toucheIn: null, vr09In: null, vr09Out: null,
+  values: { 16: 0, 17: 0, 18: 0, 19: 0 },
+  targets: [], targetMap: {}, templates: [], targetOptions: "",
+  preset: null, running: false, pending: new Map(), lastSent: new Map(), sentCount: 0,
+  messageCount: 0, probeUntil: 0, logLines: [],
+  collect: null,  // While a Map, every DT1 that arrives from the VR-09 is stored in it, keyed by address.
+};
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function hex(bytes) {
+  const parts = [];
+  for (const b of bytes) parts.push(b.toString(16).toUpperCase().padStart(2, "0"));
+  return parts.join(" ");
+}
+
+function checksum(bytes) {
+  let sum = 0;
+  for (const b of bytes) sum += b;
+  return (128 - (sum % 128)) % 128;
+}
+
+function dt1(address, value) {
+  const body = [...address, value];
+  return [0xF0, 0x41, 0x10, 0x62, 0x12, ...body, checksum(body), 0xF7];
+}
+
+function rq1(address, size) {
+  const body = [...address, (size >> 14) & 0x7F, (size >> 7) & 0x7F, size & 0x7F];
+  return [0xF0, 0x41, 0x10, 0x62, 0x11, ...body, checksum(body), 0xF7];
+}
+
+function log(text) {
+  ctx.logLines.push(text);
+  if (ctx.logLines.length > 60) ctx.logLines.shift();
+  $("log").textContent = ctx.logLines.join("\n");
+  $("log").scrollTop = $("log").scrollHeight;
+}
+
+// Because the options of a select are built in several places, one helper builds them all.
+function optionsHtml(values, labels, selected) {
+  let html = "";
+  for (let i = 0; i < values.length; i++) {
+    html += `<option value="${values[i]}" ${values[i] === selected ? "selected" : ""}>${labels[i]}</option>`;
+  }
+  return html;
+}
+
+function firstOf(pair) {
+  return pair[0];
+}
+
+function secondOf(pair) {
+  return pair[1];
+}
+
+function nameOf(item) {
+  return item.name;
+}
+
+// ---------- catalog and templates ----------
+
+function buildTargetOptions() {
+  let html = "";
+  for (const status of STATUS_ORDER) {
+    html += `<optgroup label="${STATUS_LABELS[status]}">`;
+    for (const target of ctx.targets) {
+      if (target.status === status) html += `<option value="${target.id}">${target.label}</option>`;
+    }
+    html += "</optgroup>";
+  }
+  ctx.targetOptions = html;
+}
+
+// Because each row must show its own selected target, the shared option list is searched for the value attribute.
+function targetOptionsFor(selected) {
+  return ctx.targetOptions.replace(`value="${selected}"`, `value="${selected}" selected`);
+}
+
+function templateLabel(item) {
+  return `${item.name} (${item.patch_type})`;
+}
+
+async function loadCatalog() {
+  try {
+    const targets = await (await fetch("maps/targets.json")).json();
+    const templates = await (await fetch("maps/index.json")).json();
+    ctx.targets = targets;
+    for (const target of targets) ctx.targetMap[target.id] = target;
+    ctx.templates = templates;
+    buildTargetOptions();
+    $("template-list").innerHTML = optionsHtml(templates.map(nameOf), templates.map(templateLabel), undefined);
+    $("catalog-status").innerHTML = `<span class="ok">${targets.length} targets and ${templates.length} templates loaded.</span> Every template is an untested proposal.`;
+    onTemplateSelect();
+  } catch (error) {
+    $("catalog-status").innerHTML = `<span class="bad">The catalog could not be loaded (${error.message}). Run tools/make_templates.py.</span>`;
+  }
+}
+
+function onTemplateSelect() {
+  for (const item of ctx.templates) {
+    if (item.name === $("template-list").value) $("template-summary").textContent = item.summary;
+  }
+}
+
+async function onTemplateLoad() {
+  const name = $("template-list").value;
+  if (!name) return;
+  try {
+    const loaded = await (await fetch(`maps/templates/${name}.json`)).json();
+    ctx.preset = { name: loaded.name, axes: loaded.axes };
+    $("preset-name").value = loaded.name;
+    renderAxes();
+  } catch (error) {
+    log(`The template could not be loaded: ${error.message}`);
+  }
+}
+
+// ---------- storage ----------
+
+function readPresets() {
+  try {
+    return JSON.parse(localStorage.getItem("touche-bridge-presets-v2") || "{}");
+  } catch (error) {
+    return {};
+  }
+}
+
+function writePresets(presets) {
+  try {
+    localStorage.setItem("touche-bridge-presets-v2", JSON.stringify(presets));
+  } catch (error) {
+    log("Browser storage is unavailable, use Show JSON to keep the preset.");
+  }
+}
+
+function refreshPresetList() {
+  const names = Object.keys(readPresets());
+  $("preset-list").innerHTML = optionsHtml(names, names, undefined);
+}
+
+// ---------- preset editor ----------
+
+function defaultPreset() {
+  const axes = [];
+  for (const cc of AXES) axes.push({ axis: cc, role: AXIS_ROLES[cc], targets: [] });
+  return { name: "New preset", axes };
+}
+
+function emptyEntry() {
+  const first = ctx.targets.length ? ctx.targets[0] : { id: "", low: 0, high: 127 };
+  return { target: first.id, low: first.low, high: first.high, window: [0, 127], curve: "linear" };
+}
+
+function entryHtml(entry, index) {
+  const curves = optionsHtml(["linear", "soft", "hard"], ["linear", "soft", "hard"], entry.curve);
+  return `<div class="trow" data-index="${index}">
+    <label><span>Target</span><select data-field="target">${targetOptionsFor(entry.target)}</select></label>
+    <label><span>Low</span><input data-field="low" type="number" value="${entry.low}"></label>
+    <label><span>High</span><input data-field="high" type="number" value="${entry.high}"></label>
+    <label><span>Axis from</span><input data-field="from" type="number" min="0" max="127" value="${entry.window[0]}"></label>
+    <label><span>Axis to</span><input data-field="to" type="number" min="0" max="127" value="${entry.window[1]}"></label>
+    <label><span>Curve</span><select data-field="curve">${curves}</select></label>
+    <button data-action="remove" title="Remove this target">x</button></div>`;
+}
+
+function axisHtml(row) {
+  let html = `<div class="axis" data-axis="${row.axis}"><div class="row"><b>Axis CC${row.axis}</b><span class="muted">${row.role || AXIS_ROLES[row.axis]}</span>
+    <button data-action="add">Add target</button></div>`;
+  for (let i = 0; i < row.targets.length; i++) html += entryHtml(row.targets[i], i);
+  return html + "</div>";
+}
+
+function renderAxes() {
+  let html = "";
+  for (const row of ctx.preset.axes) html += axisHtml(row);
+  $("axes").innerHTML = html;
+}
+
+function axisRow(cc) {
+  for (const row of ctx.preset.axes) if (row.axis === cc) return row;
+  return undefined;
+}
+
+function entryFromEvent(event) {
+  const holder = event.target.closest(".axis");
+  const line = event.target.closest(".trow");
+  if (!holder) return null;
+  return { row: axisRow(Number(holder.dataset.axis)), index: line ? Number(line.dataset.index) : -1 };
+}
+
+// Because one listener on the container receives every change, the rows need no listeners of their own.
+function onAxesChange(event) {
+  const field = event.target.dataset.field;
+  const found = entryFromEvent(event);
+  if (!field || !found || found.index < 0) return;
+  const entry = found.row.targets[found.index];
+  if (field === "from") entry.window[0] = Number(event.target.value);
+  else if (field === "to") entry.window[1] = Number(event.target.value);
+  else if (field === "low" || field === "high") entry[field] = Number(event.target.value);
+  else entry[field] = event.target.value;
+  if (field === "target") {
+    const target = ctx.targetMap[entry.target];
+    entry.low = target.low;
+    entry.high = target.high;
+    renderAxes();
+  }
+}
+
+function onAxesClick(event) {
+  const action = event.target.dataset.action;
+  const found = entryFromEvent(event);
+  if (!action || !found) return;
+  if (action === "add") found.row.targets.push(emptyEntry());
+  if (action === "remove") found.row.targets.splice(found.index, 1);
+  renderAxes();
+}
+
+function onPresetSave() {
+  const presets = readPresets();
+  ctx.preset.name = $("preset-name").value.trim() || "Unnamed";
+  presets[ctx.preset.name] = ctx.preset;
+  writePresets(presets);
+  refreshPresetList();
+}
+
+function onPresetLoad() {
+  const chosen = readPresets()[$("preset-list").value];
+  if (!chosen) return;
+  ctx.preset = chosen;
+  $("preset-name").value = chosen.name;
+  renderAxes();
+}
+
+function onPresetDelete() {
+  const presets = readPresets();
+  delete presets[$("preset-list").value];
+  writePresets(presets);
+  refreshPresetList();
+}
+
+function onExport() {
+  ctx.preset.name = $("preset-name").value.trim() || "Unnamed";
+  $("json").value = JSON.stringify(ctx.preset, null, 2);
+}
+
+function onImport() {
+  try {
+    ctx.preset = JSON.parse($("json").value);
+    $("preset-name").value = ctx.preset.name;
+    renderAxes();
+  } catch (error) {
+    log(`The JSON could not be read: ${error.message}`);
+  }
+}
+
+// ---------- mapping and sending ----------
+
+function curved(x, curve) {
+  if (curve === "soft") return x * x;
+  if (curve === "hard") return Math.sqrt(x);
+  return x;
+}
+
+function clampValue(value, target) {
+  const lowest = Math.min(target.low, target.high), highest = Math.max(target.low, target.high);
+  return Math.max(lowest, Math.min(highest, value));
+}
+
+function messageFor(target, value) {
+  if (target.kind === "cc") return [0xB0 | (target.channel - 1), target.cc, value];
+  return dt1(target.address, value);
+}
+
+// Because a message is sent only when the quantised value changes, a slow axis sends far fewer messages than it receives.
+function mapEntry(entry, raw) {
+  const target = ctx.targetMap[entry.target];
+  if (!target) return;
+  const start = entry.window[0], end = entry.window[1];
+  let x = end > start ? (raw - start) / (end - start) : (raw >= start ? 1 : 0);
+  x = curved(Math.max(0, Math.min(1, x)), entry.curve);
+  const value = clampValue(Math.round(entry.low + x * (entry.high - entry.low)), target);
+  if (ctx.lastSent.get(target.id) === value) return;
+  ctx.lastSent.set(target.id, value);
+  ctx.pending.set(target.id, messageFor(target, value));
+}
+
+function drainOne() {
+  if (!ctx.running || !ctx.vr09Out || ctx.pending.size === 0) return;
+  const [key, message] = ctx.pending.entries().next().value;
+  ctx.pending.delete(key);
+  ctx.vr09Out.send(message);
+  ctx.sentCount += 1;
+  $("sent").textContent = ctx.sentCount;
+  log(`${key} -> ${hex(message)}`);
+}
+
+function onBridgeToggle() {
+  ctx.running = !ctx.running;
+  $("bridge").textContent = ctx.running ? "Stop bridge" : "Start bridge";
+  $("bridge").classList.toggle("on", ctx.running);
+  ctx.lastSent.clear();
+  ctx.pending.clear();
+  if (ctx.running && !ctx.vr09Out) log("No VR-09 output is selected, so nothing will be sent.");
+}
+
+// ---------- incoming MIDI ----------
+
+function renderMeters() {
+  let html = "";
+  for (const cc of AXES) {
+    html += `<div class="row"><span style="min-width:64px">CC${cc}</span>
+    <div class="meter"><div class="track"><div class="fill" id="fill-${cc}"></div></div></div><b id="val-${cc}">0</b></div>`;
+  }
+  $("meters").innerHTML = html;
+}
+
+function onToucheMessage(data) {
+  const status = data[0] & 0xF0;
+  if (status !== 0xB0) return;
+  const cc = data[1], value = data[2];
+  ctx.messageCount += 1;
+  if (AXES.includes(cc)) {
+    ctx.values[cc] = value;
+    $(`fill-${cc}`).style.width = `${(value / 127) * 100}%`;
+    $(`val-${cc}`).textContent = value;
+    const row = axisRow(cc);
+    if (ctx.running && row) for (const entry of row.targets) mapEntry(entry, value);
+  } else if (cc === 80 || cc === 81) {
+    $("buttons").textContent = `${cc === 80 ? "left" : "right"} (CC${cc}) = ${value}`;
+  }
+}
+
+function packedAddress(bytes) {
+  return (bytes[0] << 14) | (bytes[1] << 7) | bytes[2];
+}
+
+function storeDt1(data) {
+  const isDt1 = data[0] === 0xF0 && data[1] === 0x41 && data[3] === 0x62 && data[4] === 0x12;
+  if (!isDt1) return;
+  const base = packedAddress(data.slice(5, 8));
+  const values = data.slice(8, data.length - 2);
+  for (let i = 0; i < values.length; i++) ctx.collect.set(base + i, values[i]);
+}
+
+function onVr09Message(data) {
+  if (data[0] >= 0xF8) return;  // Clock and active sensing arrive constantly and carry no information.
+  if (ctx.collect) storeDt1(data);
+  if (performance.now() < ctx.probeUntil) {
+    $("probe").textContent += `\nreply: ${hex(data)}`;
+    if (data[0] === 0xF0 && data[4] === 0x12) {
+      const values = data.slice(8, data.length - 2);
+      $("probe").textContent += `\n  address ${hex(data.slice(5, 8))}, values ${Array.from(values).join(" ")}`;
+    }
+  }
+}
+
+function onMidiMessage(event) {
+  if (ctx.toucheIn && event.target.id === ctx.toucheIn.id) onToucheMessage(event.data);
+  if (ctx.vr09In && event.target.id === ctx.vr09In.id) onVr09Message(event.data);
+}
+
+function updateRate() {
+  $("rate").textContent = ctx.messageCount;
+  ctx.messageCount = 0;
+}
+
+// ---------- ports ----------
+
+function fillSelect(select, ports, hint) {
+  let html = '<option value="">(none)</option>';
+  let match = null;
+  for (const port of ports.values()) {
+    html += `<option value="${port.id}">${port.name}</option>`;
+    if (!match && port.name.toLowerCase().includes(hint)) match = port;
+  }
+  select.innerHTML = html;
+  if (match) select.value = match.id;
+}
+
+function chooseInput(select, ports, previous) {
+  if (previous) previous.onmidimessage = null;
+  const port = ports.get(select.value) || null;
+  if (port) port.onmidimessage = onMidiMessage;
+  return port;
+}
+
+function applyPorts() {
+  ctx.toucheIn = chooseInput($("touche-in"), ctx.access.inputs, ctx.toucheIn);
+  ctx.vr09In = chooseInput($("vr09-in"), ctx.access.inputs, ctx.vr09In);
+  ctx.vr09Out = ctx.access.outputs.get($("vr09-out").value) || null;
+}
+
+function refreshPorts() {
+  fillSelect($("touche-in"), ctx.access.inputs, "main port");
+  if (!$("touche-in").value) fillSelect($("touche-in"), ctx.access.inputs, "touche");
+  fillSelect($("vr09-in"), ctx.access.inputs, "vr-09");
+  fillSelect($("vr09-out"), ctx.access.outputs, "vr-09");
+  applyPorts();
+}
+
+function onPortChange() {
+  if (ctx.access) applyPorts();
+}
+
+async function onConnect() {
+  try {
+    ctx.access = await navigator.requestMIDIAccess({ sysex: true });
+  } catch (error) {
+    $("support").innerHTML = `<span class="bad">MIDI access was refused: ${error.message}</span>`;
+    return;
+  }
+  ctx.access.onstatechange = refreshPorts;
+  refreshPorts();
+  $("support").innerHTML = '<span class="ok">MIDI access granted, with SysEx.</span>';
+}
+
+function onProbe(message) {
+  if (!ctx.vr09Out) { $("probe").textContent = "No VR-09 output is selected."; return; }
+  ctx.probeUntil = performance.now() + 1500;
+  $("probe").textContent = `sent: ${hex(message)}`;
+  ctx.vr09Out.send(message);
+}
+
+function onIdentity() {
+  onProbe([0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7]);
+}
+
+function onReadDrawbars() {
+  onProbe(rq1([0x02, 0x00, 0x03], 9));
+}
+
+// ---------- CC out test ----------
+
+function startTimer(ms, resolve) {
+  setTimeout(resolve, ms);
+}
+
+function sleep(ms) {
+  return new Promise(startTimer.bind(null, ms));
+}
+
+// Because the unit answers each RQ1 with one or more DT1 messages, a short wait after every request lets the replies land in the Map.
+async function snapshot() {
+  const state = new Map();
+  ctx.collect = state;
+  for (const block of BLOCKS) {
+    ctx.vr09Out.send(rq1(block.address, block.size));
+    await sleep(120);
+  }
+  await sleep(150);
+  ctx.collect = null;
+  return state;
+}
+
+function blockName(address) {
+  for (const block of BLOCKS) {
+    const start = packedAddress(block.address);
+    if (address >= start && address < start + block.size) return block.name;
+  }
+  return "unknown block";
+}
+
+function addressText(address) {
+  return hex([(address >> 14) & 0x7F, (address >> 7) & 0x7F, address & 0x7F]);
+}
+
+function diffText(before, after) {
+  const lines = [];
+  for (const [address, value] of after) {
+    const old = before.get(address);
+    if (old !== undefined && old !== value) lines.push(`  ${addressText(address)} (${blockName(address)}): ${old} -> ${value}`);
+  }
+  return lines;
+}
+
+function ccMessage() {
+  const channel = Number($("cc-channel").value), cc = Number($("cc-number").value), value = Number($("cc-value").value);
+  return { bytes: [0xB0 | (channel - 1), cc, value], text: `channel ${channel}, CC${cc} = ${value}` };
+}
+
+function onCcSend() {
+  if (!ctx.vr09Out) { $("cc-result").textContent = "No VR-09 output is selected."; return; }
+  const message = ccMessage();
+  ctx.vr09Out.send(message.bytes);
+  $("cc-result").textContent = `sent ${hex(message.bytes)} (${message.text})`;
+}
+
+async function onCcCompare() {
+  if (!ctx.vr09Out || !ctx.vr09In) { $("cc-result").textContent = "Both the VR-09 input and output must be selected."; return; }
+  const message = ccMessage();
+  $("cc-result").textContent = "Reading the state before...";
+  const before = await snapshot();
+  ctx.vr09Out.send(message.bytes);
+  await sleep(300);
+  $("cc-result").textContent = "Reading the state after...";
+  const after = await snapshot();
+  const changes = diffText(before, after);
+  const header = `sent ${hex(message.bytes)} (${message.text}); read ${before.size} bytes before and ${after.size} after`;
+  const verdict = before.size === 0 ? "No reply from the VR-09: check the input port and MIDI IN Mode 2." : (changes.length ? `${changes.length} parameter(s) changed:` : "No parameter changed. Either the CC is ignored, or it only affects the sound without touching these blocks.");
+  $("cc-result").textContent = [header, verdict, ...changes].join("\n");
+}
+
+function labelOfCc(pair) {
+  return `CC${pair[0]} ${pair[1]}`;
+}
+
+function fillCcPanel() {
+  $("cc-channel").innerHTML = optionsHtml(CHANNELS.map(firstOf), CHANNELS.map(secondOf), undefined);
+  $("cc-number").innerHTML = optionsHtml(CC_LIST.map(firstOf), CC_LIST.map(labelOfCc), undefined);
+  $("cc-channel").value = "4";
+}
+
+function onCcValue() {
+  $("cc-value-text").textContent = $("cc-value").value;
+}
+
+// ---------- start ----------
+
+function start() {
+  const secure = window.isSecureContext, supported = !!navigator.requestMIDIAccess;
+  $("support").innerHTML = `Secure context: <b class="${secure ? "ok" : "bad"}">${secure}</b>, Web MIDI: <b class="${supported ? "ok" : "bad"}">${supported}</b>`;
+  ctx.preset = defaultPreset();
+  renderMeters();
+  renderAxes();
+  refreshPresetList();
+  fillCcPanel();
+  loadCatalog();
+  $("connect").addEventListener("click", onConnect);
+  $("axes").addEventListener("change", onAxesChange);
+  $("axes").addEventListener("click", onAxesClick);
+  $("template-list").addEventListener("change", onTemplateSelect);
+  $("template-load").addEventListener("click", onTemplateLoad);
+  $("preset-save").addEventListener("click", onPresetSave);
+  $("preset-load").addEventListener("click", onPresetLoad);
+  $("preset-delete").addEventListener("click", onPresetDelete);
+  $("export").addEventListener("click", onExport);
+  $("import").addEventListener("click", onImport);
+  $("bridge").addEventListener("click", onBridgeToggle);
+  $("identity").addEventListener("click", onIdentity);
+  $("read-drawbars").addEventListener("click", onReadDrawbars);
+  $("cc-send").addEventListener("click", onCcSend);
+  $("cc-compare").addEventListener("click", onCcCompare);
+  $("cc-value").addEventListener("input", onCcValue);
+  for (const id of ["touche-in", "vr09-in", "vr09-out"]) $(id).addEventListener("change", onPortChange);
+  setInterval(drainOne, SEND_GAP_MS);
+  setInterval(updateRate, 1000);
+}
+
+start();
+</script>
+</body>
+</html>

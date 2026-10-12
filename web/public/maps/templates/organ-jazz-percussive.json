@@ -1,0 +1,82 @@
+{
+ "name": "organ-jazz-percussive",
+ "patch_type": "organ",
+ "summary": "A clean, percussive jazz sound: click and the 4' drawbar come in with the tone axis.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "click-on",
+     "low": 10,
+     "high": 63,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "organ-upper-d8",
+     "low": 6,
+     "high": 8,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d4",
+     "low": 2,
+     "high": 8,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "rotary-fast",
+     "low": 0,
+     "high": 1,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "eq-high",
+     "low": 52,
+     "high": 70,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

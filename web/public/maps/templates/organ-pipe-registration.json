@@ -1,0 +1,102 @@
+{
+ "name": "organ-pipe-registration",
+ "patch_type": "organ",
+ "summary": "A pipe-organ build-up: foundation fixed by the patch, mixtures come in over the tone axis.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "organ-level",
+     "low": 70,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "organ-upper-d4",
+     "low": 0,
+     "high": 8,
+     "window": [
+      10,
+      70
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d2",
+     "low": 0,
+     "high": 8,
+     "window": [
+      30,
+      90
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d1ff",
+     "low": 0,
+     "high": 8,
+     "window": [
+      50,
+      110
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d1",
+     "low": 0,
+     "high": 8,
+     "window": [
+      70,
+      130
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "leakage",
+     "low": 0,
+     "high": 40,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "cc-upper-reverb",
+     "low": 20,
+     "high": 110,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  }
+ ]
+}

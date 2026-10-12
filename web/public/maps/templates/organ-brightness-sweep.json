@@ -1,0 +1,122 @@
+{
+ "name": "organ-brightness-sweep",
+ "patch_type": "organ",
+ "summary": "Tone opens the upper harmonics one after the other; body is the level; modulation flips the rotary; effects add overdrive.",
+ "status": "proposal, untested",
+ "axes": [
+  {
+   "axis": 16,
+   "role": "body",
+   "targets": [
+    {
+     "target": "organ-level",
+     "low": 70,
+     "high": 127,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 17,
+   "role": "tone",
+   "targets": [
+    {
+     "target": "organ-upper-d4",
+     "low": 0,
+     "high": 8,
+     "window": [
+      0,
+      50
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d2f",
+     "low": 0,
+     "high": 8,
+     "window": [
+      15,
+      65
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d2",
+     "low": 0,
+     "high": 8,
+     "window": [
+      30,
+      80
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d1f",
+     "low": 0,
+     "high": 8,
+     "window": [
+      45,
+      95
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d1ff",
+     "low": 0,
+     "high": 8,
+     "window": [
+      60,
+      110
+     ],
+     "curve": "linear"
+    },
+    {
+     "target": "organ-upper-d1",
+     "low": 0,
+     "high": 8,
+     "window": [
+      75,
+      125
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 18,
+   "role": "modulation",
+   "targets": [
+    {
+     "target": "rotary-fast",
+     "low": 0,
+     "high": 1,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "linear"
+    }
+   ]
+  },
+  {
+   "axis": 19,
+   "role": "effects",
+   "targets": [
+    {
+     "target": "overdrive",
+     "low": 0,
+     "high": 90,
+     "window": [
+      0,
+      127
+     ],
+     "curve": "soft"
+    }
+   ]
+  }
+ ]
+}
